@@ -1,0 +1,33 @@
+{
+  "name": "@chameleon/core",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public",
+    "tag": "latest"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "tapable": "^2.3.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^0.32.0"
+  },
+  "files": [
+    "dist/**/*",
+    "types/**/*"
+  ],
+  "lint-staged": {
+    "*.ts": "eslint --fix",
+    "*.js": "eslint --fix",
+    "*.json": "prettier --write"
+  }
+}

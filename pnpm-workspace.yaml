@@ -1,0 +1,9 @@
+packages:
+  - "packages/*"
+  - "examples"
+  - "libs/*"
+  - "components/*"
+  - "!**/tests/*" # Exclude the 'tests' folder from being considered a package
+  - "projects/*"
+
+link-workspace-packages: true # Automatically link workspace packages (optional)
