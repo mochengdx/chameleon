@@ -27,6 +27,7 @@
     "packages/*/tests"
   ],
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "types/*"
   ]
 }
