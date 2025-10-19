@@ -1,45 +1,55 @@
 import * as React from 'react'
-import { ArrowPathIcon, CloudArrowUpIcon, FingerPrintIcon, LockClosedIcon } from '@heroicons/react/24/outline'
+import { ArrowPathIcon, CloudArrowUpIcon, DocumentIcon, DocumentMagnifyingGlassIcon, FingerPrintIcon, LockClosedIcon } from '@heroicons/react/24/outline'
 
 const features = [
   {
-    name: 'Push to deploy',
+    name: 'Cross-Engine Compatibility',
     description:
-      'Morbi viverra dui mi arcu sed. Tellus semper adipiscing suspendisse semper morbi. Odio urna massa nunc massa.',
+      'Built to work with WebGL engines like Three.js, Galacean, and others, making it highly adaptable for different project needs.',
     icon: CloudArrowUpIcon,
   },
   {
-    name: 'SSL certificates',
+    name: 'Interactive 3D Controls',
     description:
-      'Sit quis amet rutrum tellus ullamcorper ultricies libero dolor eget. Sem sodales gravida quam turpis enim lacus amet.',
+      'Enable intuitive manipulation of models with touch or mouse input for zooming, rotating, and translating.',
     icon: LockClosedIcon,
   },
   {
-    name: 'Simple queues',
+    name: 'Modular Architecture',
     description:
-      'Quisque est vel vulputate cursus. Risus proin diam nunc commodo. Lobortis auctor congue commodo diam neque.',
+      'Highly extensible pipeline where each stage of the process (e.g., model loading, rendering, post-processing) can be customized and extended with plugins..',
     icon: ArrowPathIcon,
   },
   {
-    name: 'Advanced security',
+    name: 'Real-Time Debugging',
     description:
-      'Arcu egestas dolor vel iaculis in ipsum mauris. Tincidunt mattis aliquet hac quis. Id hac maecenas ac donec pharetra eget.',
+      'Built-in tools for developers to visualize the rendering pipeline, log events, and inspect model states during the development process.',
     icon: FingerPrintIcon,
   },
+  {
+    name: 'Plugin Support',
+    description:
+      'Easily extendable with custom plugins for shaders, materials, or other rendering effects.',
+    icon: DocumentMagnifyingGlassIcon,
+  },
+  {
+    name: 'Optimized for Performance',
+    description:
+      'Lightweight and efficient, with optimization strategies that reduce CPU and GPU load for smoother user experiences.',
+    icon: DocumentIcon,
+  },
 ]
-
-export default () =>  {
+const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   return (
-    <div className="bg-white py-24 sm:py-32">
+    <div className="bg-white py-16 sm:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl lg:text-center">
-          <h2 className="text-base/7 font-semibold text-indigo-600">Deploy faster</h2>
+          {/* <h2 className="text-base/7 font-semibold text-indigo-600">Deploy faster</h2> */}
           <p className="mt-2 text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl lg:text-balance">
-            Everything you need to deploy your app
+            Chameleon
           </p>
           <p className="mt-6 text-lg/8 text-gray-700">
-            Quis tellus eget adipiscing convallis sit sit eget aliquet quis. Suspendisse eget egestas a elementum
-            pulvinar et feugiat blandit at. In mi viverra elit nunc.
+            Chameleon is a flexible and highly extensible 3D rendering and interaction framework designed to work seamlessly across various WebGL engines, including Three.js, Galacean, and more. It provides a modular pipeline that allows developers to load, render, and interact with 3D models efficiently, while also enabling custom extensions and interactions.
           </p>
         </div>
         <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-4xl">
@@ -58,6 +68,9 @@ export default () =>  {
           </dl>
         </div>
       </div>
+      {children}
     </div>
   )
 }
+
+export default Layout 
