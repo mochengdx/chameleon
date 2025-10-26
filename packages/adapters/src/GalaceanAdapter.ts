@@ -38,8 +38,7 @@ type SpecRenderingContext = RenderingContext<
  *   improving error messages, and making per-frame timing accurate.
  */
 export class GalaceanAdapter
-  implements EngineAdapter<GLEngine, Scene, Entity, GLTFResource, Entity, WebGLGraphicDeviceOptions>
-{
+  implements EngineAdapter<GLEngine, Scene, Entity, GLTFResource, Entity, WebGLGraphicDeviceOptions> {
   // adapter id for logging/diagnostics
   name = SUPPORTED_ADAPTERS.galacean;
 
@@ -199,9 +198,7 @@ export class GalaceanAdapter
    */
   dispose() {
     try {
-      if (this.engine && typeof (this.engine as any).destroy === "function") {
-        this.engine.destroy();
-      }
+      this?.engine?.destroy();
     } catch {
       // ignore destroy errors to avoid throwing during cleanup
     }

@@ -43,12 +43,11 @@ export class PipelineAdapterPlugin implements IPlugin {
     // 2) Load resources (support string(s) and in-memory sources)
     pipeline.hooks.resourceLoad.tapPromise(this.name, async (ctx: RenderingContext) => {
       const src = ctx.request?.source;
-
       // normalize sources to an array for uniform handling
       const sources: Array<any> = Array.isArray(src) ? src : src == null ? [] : [src];
 
       // fast path: nothing to load
-      if (sources.length === 0) {
+      if (sources.length === 0) { 
         ctx.rawAssets = [];
         return ctx;
       }
@@ -134,6 +133,11 @@ export class PipelineAdapterPlugin implements IPlugin {
 
     // 4) Build scene using adapter.buildScene if provided. Otherwise no-op.
     pipeline.hooks.buildScene.tapPromise(this.name, async (ctx: RenderingContext) => {
+      if (ctx.abortSignal?.aborted) throw new Error("buildScene aborted");
+      ctx.metadata = ctx.metadata || {};
+      ctx.metadata.stageLocks = ctx.metadata.stageLocks || {};
+      if (ctx.metadata.stageLocks["buildScene"]) return ctx;
+      ctx.metadata.stageLocks["buildScene"] = true;
       try {
         if (typeof ctx.adapter.buildScene === "function") {
           await ctx.adapter.buildScene(ctx.parsedGLTF, ctx);
@@ -142,6 +146,31 @@ export class PipelineAdapterPlugin implements IPlugin {
         try { pipeline.logger?.error?.("PipelineAdapterPlugin:buildScene error", err); } catch { }
         throw err;
       }
+      // register cleanup: let adapter tear down built scene if it provides a hook,
+      // else provide a conservative default cleanup that clears parsedGLTF.
+      ctx.metadata.stageCleanups = ctx.metadata.stageCleanups || {};
+      ctx.metadata.stageCleanups["buildScene"] = ctx.metadata.stageCleanups["buildScene"] || [];
+      ctx.metadata.stageCleanups["buildScene"].push(async (c: RenderingContext) => {
+        try {
+          // if (typeof c.adapter.dispose === "function") {
+          //   // await c.adapter.dispose();
+          // } else {
+            // fallback: if parsedGLTF contains a targetEngineEntity, try to dispose it if possible
+            const target = (c?.parsedGLTF?.targetEngineEntity) || null;
+            //dx - todo: improve generic disposal strategy based on engine/entity types
+            try {
+              if (target && typeof (target as any).destroy === "function"){
+                target.destroy();
+                ctx.pipeline?.logger?.info?.("PipelineAdapterPlugin: disposed targetEngineEntity during buildScene cleanup");
+              }
+            } catch { }
+          // }
+        } catch { }
+      });
+
+      ctx.metadata.stagesCompleted = ctx.metadata.stagesCompleted || {};
+      ctx.metadata.stagesCompleted["buildScene"] = false;
+      ctx.metadata.stageLocks["buildScene"] = false;
 
       return ctx;
     });

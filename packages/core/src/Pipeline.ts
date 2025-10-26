@@ -43,15 +43,13 @@ export type StageHooks = {
 export class Pipeline<TEngine = any, TScene = any, TCamera = any, TOptions = any> {
     // public, readonly hooks collection exposed for plugins to tap into
   public readonly hooks: StageHooks;
-
-  // logger instance; default to PipelineLogger but can be swapped for testing or silencing
+    // logger instance; default to PipelineLogger but can be swapped for testing or silencing
   public logger: Logger = console;
 
   /**
    * Construct a Pipeline with a concrete EngineAdapter.
    * @param adapter The engine adapter responsible for engine-specific operations.
-   */
-  constructor(public adapter: EngineAdapter<TEngine, TScene, TCamera, TOptions>) {
+   */constructor(public adapter: EngineAdapter<TEngine, TScene, TCamera, TOptions>) {
     // assign adapter (explicit for clarity)
     this.adapter = adapter;
 
@@ -66,8 +64,7 @@ export class Pipeline<TEngine = any, TScene = any, TCamera = any, TOptions = any
       dispose: new SyncHook<[RenderingContext]>(["ctx"])
     };
   }
-
-  /**
+    /**
    * getHook - safely retrieve a typed hook by name.
    * Throws if the hook name is invalid to catch typos early.
    */
@@ -78,7 +75,7 @@ export class Pipeline<TEngine = any, TScene = any, TCamera = any, TOptions = any
     return this.hooks[name];
   }
 
-  /**
+    /**
    * use - register a plugin (plugin implements IPlugin.apply).
    * Keeps plugin installation simple and discoverable.
    */
@@ -101,110 +98,280 @@ export class Pipeline<TEngine = any, TScene = any, TCamera = any, TOptions = any
   }
 
   /**
-   * run - execute the full pipeline: init -> load -> parse -> build -> render loop -> postProcess.
-   * Returns the RenderingContext for caller consumption and later disposal.
+   * runStages
+   * - Public, reusable routine to execute an ordered list of stage hooks.
+   * - Marks stagesCompleted in ctx.metadata and preserves waterfall/bail semantics.
+   * - Throws on abort or unknown hook names.
+   */
+  public async runStages(
+    names: (keyof StageHooks)[],
+    ctx: RenderingContext<TEngine, TScene, TCamera>
+  ): Promise<RenderingContext<TEngine, TScene, TCamera>> {
+    const ensureNotAborted = () => {
+      if (ctx.abortSignal?.aborted) throw new Error("Pipeline aborted");
+    };
+
+    for (const name of names) {
+      ensureNotAborted();
+      const hook = this.hooks[name] as any; // will cast to concrete types below
+
+      if (!hook) throw new Error(`Unknown hook "${String(name)}"`);
+
+      // dispatch based on stage name -> use correct tapable API and keep types explicit
+      switch (name) {
+        case "initEngine":
+        case "resourceLoad":
+        case "resourceParse":
+        case "buildScene":
+        case "postProcess":
+          // these hooks expose a promise() method (AsyncSeries* variants)
+          if (typeof hook.promise === "function") {
+            const result = await hook.promise(ctx);
+            if (result && typeof result === "object" && (name === "resourceLoad" || name === "buildScene")) {
+              ctx = result as RenderingContext<TEngine, TScene, TCamera>;
+            }
+            if (name === "resourceParse" && result === false) {
+              throw new Error("Pipeline: resourceParse validation failed (bail returned false)");
+            }
+          } else {
+            // fallback for unexpected shapes: try callAsync/call
+            if (typeof hook.callAsync === "function") {
+              await new Promise<void>((resolve, reject) => hook.callAsync(ctx, (err?: any) => (err ? reject(err) : resolve())));
+            } else if (typeof hook.call === "function") {
+              hook.call(ctx);
+            } else {
+              throw new Error(`Hook "${String(name)}" unsupported shape`);
+            }
+          }
+          break;
+
+        case "renderLoop":
+          // renderLoop is AsyncParallelHook: support promise() or callAsync()
+          if (typeof hook.callAsync === "function") {
+            // callAsync is used elsewhere for per-frame non-await invocation;
+            // here we await the promise() for one-time execution if available.
+            if (typeof hook.promise === "function") {
+              await hook.promise(ctx);
+            } else {
+              await new Promise<void>((resolve, reject) => hook.callAsync(ctx, (err?: any) => (err ? reject(err) : resolve())));
+            }
+          } else if (typeof hook.promise === "function") {
+            await hook.promise(ctx);
+          } else {
+            throw new Error(`Hook "${String(name)}" unsupported shape`);
+          }
+          break;
+
+        case "dispose":
+          // dispose is SyncHook -> call synchronously
+          if (typeof hook.call === "function") {
+            hook.call(ctx);
+          } else {
+            // fallback to other shapes if necessary
+            if (typeof hook.callAsync === "function") {
+              await new Promise<void>((resolve, reject) => hook.callAsync(ctx, (err?: any) => (err ? reject(err) : resolve())));
+            } else if (typeof hook.promise === "function") {
+              await hook.promise(ctx);
+            } else {
+              throw new Error(`Hook "${String(name)}" unsupported shape`);
+            }
+          }
+          break;
+
+        default:
+          throw new Error(`Unknown hook "${String(name)}"`);
+      }
+
+      // mark stage done on ctx.metadata for idempotence checks
+      try {
+        ctx.metadata = ctx.metadata || {};
+        ctx.metadata.stagesCompleted = ctx.metadata.stagesCompleted || {};
+        ctx.metadata.stagesCompleted[String(name)] = true;
+      } catch {}
+    }
+
+    return ctx;
+  }
+
+  /**
+   * run - execute the full pipeline (initEngine .. postProcess).
+   * Delegates stage execution to runStages for consistency.
    */
   public async run(container: HTMLElement, request: RenderRequest): Promise<RenderingContext> {
-    // create per-run abort-controller and context object
     const abortController = new AbortController();
-    const ctx: RenderingContext<TEngine,TScene,TCamera> = {
+    const ctx: RenderingContext<TEngine, TScene, TCamera> = {
       request,
       container,
       adapter: this.adapter,
-      metadata: {},                      // place for plugins to store misc data
+      metadata: {},
       abortController,
       abortSignal: abortController.signal,
       renderState: { running: false, frameCount: 0 },
       pipeline: this,
-      engineHandles: { engine: null as any, scene: null as any, camera: null as any}
+      engineHandles: { engine: null as any, scene: null as any, camera: null as any },
     };
 
-    // helper: throw if pipeline was aborted
-    const ensureNotAborted = () => {
-      if (ctx.abortSignal.aborted) {
-        throw new Error("Pipeline aborted");
-      }
-    };
+    const order: (keyof StageHooks)[] = [
+      "initEngine",
+      "resourceLoad",
+      "resourceParse",
+      "buildScene",
+      "renderLoop",
+      "postProcess",
+    ];
 
     try {
-      // 1) Engine initialization stage - adapter and plugins may hook here
-      ensureNotAborted();
-      await this.hooks.initEngine.promise(ctx);
+      await this.runStages(order, ctx);
 
-      // 2) Resource loading (waterfall) - allows progressive enrichment of ctx
-      ensureNotAborted();
-      await this.hooks.resourceLoad.promise(ctx);
-
-      // 3) Resource parsing / validation (bail) - bail if a hook returns a non-undefined sentinel
-      ensureNotAborted();
-      const bailResult = await this.hooks.resourceParse.promise(ctx);
-      if (bailResult === false) {
-        // a hook explicitly signaled validation failure
-        throw new Error("Pipeline: resourceParse validation failed (bail returned false)");
-      }
-
-      // 4) Scene construction - build objects in the engine-specific scene
-      ensureNotAborted();
-      await this.hooks.buildScene.promise(ctx);
-
-      // 5) Start render loop - prefer adapter-managed loop when available
+      // after stages, handle renderLoop behavior (adapter-managed or single run)
       ctx.renderState = ctx.renderState ?? { running: true, frameCount: 0 };
       ctx.renderState.running = true;
-      
-      if ( typeof this.adapter.startRenderLoop === "function") {
-        // adapter takes responsibility for calling frame callback at desired cadence
-        this.adapter.startRenderLoop(ctx, (deltaMs: number) => {
-          // update frame counter (non-blocking)
-          ctx.renderState!.frameCount = (ctx.renderState!.frameCount || 0) + 1;
 
-          // call all renderLoop taps in parallel; don't throw to keep loop alive
-          this.hooks.renderLoop.callAsync(ctx, (err?: any) => {
-            if (err) {
-              // record last error on context and log it
-              ctx.renderState!.lastError = err;
-              try { this.logger.error?.("renderLoop hook error:", err); } catch (_) {}
-            }
-          });
+      if (typeof this.adapter.startRenderLoop === "function") {
+        this.adapter.startRenderLoop(ctx, (deltaMs: number) => {
+          ctx.renderState!.frameCount = (ctx.renderState!.frameCount || 0) + 1;
+          try {
+            this.hooks.renderLoop.callAsync(ctx, (err?: any) => {
+              if (err) {
+                ctx.renderState!.lastError = err;
+                try { this.logger.error?.("renderLoop hook error:", err); } catch (_) {}
+              }
+            });
+          } catch (e) {
+            try { this.logger.error?.("Error invoking renderLoop hooks:", e); } catch (_) {}
+          }
         });
       } else {
-        // if adapter doesn't supply a loop, run renderLoop once to allow setup
+        // ensure at least one call to renderLoop for setup
         await this.hooks.renderLoop.promise(ctx);
       }
 
-      // 6) Post-process stage (runs once after setup; continuous work belongs in renderLoop)
+      // run postProcess which was already executed in runStages order above,
+      // but keep this here if you want to guarantee postProcess happens after loop setup.
       await this.hooks.postProcess.promise(ctx);
 
-      // return context so caller may interact (e.g., call dispose later)
       return ctx;
     } catch (err) {
-      // log error and attempt best-effort cleanup, then rethrow
       try { this.logger.error?.("Pipeline run error:", err); } catch (_) {}
-
-      // abort running operations and call dispose hooks to free resources
       try { abortController.abort(); } catch (_) {}
       try { this.hooks.dispose.call(ctx); } catch (_) {}
       try { this.adapter.dispose?.(); } catch (_) {}
-
       throw err;
     }
   }
 
   /**
-   * dispose - explicit cleanup for an active RenderingContext.
-   * Safe to call multiple times.
+   * runFrom
+   * - Prepare ctx for partial re-run and then delegate execution to runStages.
+   * - Responsibilities before re-running:
+   *   1) abort previous run (cooperative),
+   *   2) replace abortController/signal,
+   *   3) invoke registered stageCleanups for stages that will be re-run,
+   *   4) clear stagesCompleted flags for those stages,
+   *   5) ensure engine is present when starting after initEngine.
    */
-  public async dispose(ctx: RenderingContext) {
-    // abort the run to stop any ongoing async work
-    try { ctx.abortController.abort(); } catch (_) {}
+  public async runFrom(
+    start: keyof StageHooks,
+    ctx: RenderingContext<TEngine, TScene, TCamera>
+  ): Promise<RenderingContext<TEngine, TScene, TCamera>> {
+    const order: (keyof StageHooks)[] = [
+      "initEngine",
+      "resourceLoad",
+      "resourceParse",
+      "buildScene",
+      "renderLoop",
+      "postProcess",
+    ];
+    const startIndex = order.indexOf(start);
+    if (startIndex === -1) throw new Error(`Unknown start stage "${String(start)}"`);
+    const remaining = order.slice(startIndex);
 
-    // synchronous dispose hooks for plugins to release resources
-    try { this.hooks.dispose.call(ctx); } catch (e) {
-      try { this.logger.error?.("Error in dispose hooks:", e); } catch (_) {}
+    // 1) abort previous run
+    try { ctx.abortController?.abort(); } catch {}
+
+    // 2) new abort controller for this run
+    const newAbortController = new AbortController();
+    ctx.abortController = newAbortController;
+    ctx.abortSignal = newAbortController.signal;
+
+    // helper to check abort
+    const ensureNotAborted = () => {
+      if (ctx.abortSignal.aborted) throw new Error("Pipeline aborted");
+    };
+
+    // 3) run registered cleanup callbacks for stages that will be run
+    try {
+      const sc = (ctx.metadata && ctx.metadata.stageCleanups) || {};
+      for (const stage of remaining) {
+        const fns = sc[String(stage)] || [];
+        for (const fn of fns) {
+          try {
+            await fn(ctx);
+          } catch (e) {
+            try { this.logger.error?.(`Error during cleanup for stage ${String(stage)}:`, e); } catch (_) {}
+          }
+        }
+      }
+    } catch (e) {
+      try { this.logger.error?.("Error while executing stageCleanups:", e); } catch (_) {}
     }
 
-    // adapter-level cleanup (if implemented)
-    try { this.adapter.dispose?.(); } catch (e) {
-      try { this.logger.error?.("Adapter dispose error:", e); } catch (_) {}
+    // 4) clear stagesCompleted flags for the stages we're about to run
+    try {
+      ctx.metadata = ctx.metadata || {};
+      ctx.metadata.stagesCompleted = ctx.metadata.stagesCompleted || {};
+      for (const s of remaining) {
+        ctx.metadata.stagesCompleted[String(s)] = false;
+      }
+    } catch {}
+
+    // 5) if starting after initEngine but engine not present, try to initEngine first
+    if (startIndex > 0) {
+      const enginePresent = Boolean((ctx.engineHandles && ctx.engineHandles.engine) || (this.adapter && this.adapter.engine));
+      if (!enginePresent) {
+        ensureNotAborted();
+        await this.hooks.initEngine.promise(ctx);
+      }
+    }
+
+    // Delegate execution to runStages (which marks stagesCompleted)
+    try {
+      ctx = await this.runStages(remaining, ctx);
+
+      // handle renderLoop setup when it is included in remaining
+      if (remaining.includes("renderLoop")) {
+        ctx.renderState = ctx.renderState ?? { running: true, frameCount: 0 };
+        ctx.renderState.running = true;
+
+        if (typeof this.adapter.startRenderLoop === "function") {
+          this.adapter.startRenderLoop(ctx, (deltaMs: number) => {
+            ctx.renderState!.frameCount = (ctx.renderState!.frameCount || 0) + 1;
+            try {
+              this.hooks.renderLoop.callAsync(ctx, (err?: any) => {
+                if (err) {
+                  ctx.renderState!.lastError = err;
+                  try { this.logger.error?.("renderLoop hook error:", err); } catch (_) {}
+                }
+              });
+            } catch (e) {
+              try { this.logger.error?.("Error invoking renderLoop hooks:", e); } catch (_) {}
+            }
+          });
+        } else {
+          // fallback: at least call renderLoop once
+          await this.hooks.renderLoop.promise(ctx);
+        }
+      }
+
+      return ctx;
+    } catch (err) {
+      try { this.logger.error?.("Pipeline runFrom error:", err); } catch (_) {}
+      try { ctx.abortController?.abort(); } catch (_) {}
+      try { this.hooks.dispose.call(ctx); } catch (_) {}
+      try { this.adapter.dispose?.(); } catch (_) {}
+      throw err;
     }
   }
+
 }
+

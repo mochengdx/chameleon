@@ -11,7 +11,7 @@ import type { RenderingContext } from "./RenderingContext";
  * TScene: concrete scene/container type (e.g. THREE.Scene)
  * TCamera: concrete camera type (e.g. THREE.Camera)
  * TResource: normalized resource type returned by loader / parser (e.g. parsed glTF model)
- * TEngity: parsed/normalized resource or engine-entity that buildScene consumes
+ * TEntity: parsed/normalized resource or engine-entity that buildScene consumes
  * TOptions: adapter-specific options passed to initEngine / run-time
  *
  * NOTE: Do not change the method signatures below — comments only.
@@ -21,7 +21,7 @@ export interface EngineAdapter<
     TScene = any,
     TCamera = any,
     TResource = any,
-    TEngity = any,
+    TEntity = any,
     TOptions = any,
 > {
     // Adapter identity string used for logging and diagnostics.
@@ -50,7 +50,7 @@ export interface EngineAdapter<
      */
     initEngine(
         container: HTMLElement,
-        ctx: RenderingContext<TEngine, TScene, TCamera, TOptions, TResource, TEngity>,
+        ctx: RenderingContext<TEngine, TScene, TCamera, TOptions, TResource, TEntity>,
         options?: TOptions
     ): Promise<{ engine: TEngine; scene: TScene; camera: TCamera }>;
 
@@ -69,14 +69,14 @@ export interface EngineAdapter<
      */
     loadResource(
         src: string,
-        ctx: RenderingContext<TEngine, TScene, TCamera, TOptions, TResource, TEngity>,
+        ctx: RenderingContext<TEngine, TScene, TCamera, TOptions, TResource, TEntity>,
     ): Promise<TResource>;
 
     /**
      * parseResource (optional)
      * - Purpose: convert raw loaded asset into engine-friendly parsed entity/entities.
      * - Use-case: when loadResource returns raw bytes or generic JSON, parseResource
-     *   transforms that into TEngity instances (e.g. meshes, materials, metadata).
+     *   transforms that into TEntity instances (e.g. meshes, materials, metadata).
      *
      * Parameters:
      * - raw: the raw TResource produced by loadResource.
@@ -87,8 +87,8 @@ export interface EngineAdapter<
      */
     parseResource(
         raw: TResource,
-        ctx: RenderingContext<TEngine, TScene, TCamera, TOptions, TResource, TEngity>,
-    ): Promise<TEngity>;
+        ctx: RenderingContext<TEngine, TScene, TCamera, TOptions, TResource, TEntity>,
+    ): Promise<TEntity>;
 
     /**
      * buildScene
@@ -104,8 +104,8 @@ export interface EngineAdapter<
      *   optionally return the mutated RenderingContext for chaining convenience.
      */
     buildScene(
-        parsed: TEngity,
-        ctx: RenderingContext<TEngine, TScene, TCamera, TOptions, TResource, TEngity>,
+        parsed: TEntity,
+        ctx: RenderingContext<TEngine, TScene, TCamera, TOptions, TResource, TEntity>,
     ): Promise<void | RenderingContext<TEngine, TScene, TCamera, TOptions, TResource>>;
 
     /**
@@ -122,7 +122,7 @@ export interface EngineAdapter<
      * - Implementations should respect ctx.abortSignal for cooperative cancellation if applicable.
      */
     startRenderLoop(
-        ctx: RenderingContext<TEngine, TScene, TCamera, TOptions, TResource, TEngity>,
+        ctx: RenderingContext<TEngine, TScene, TCamera, TOptions, TResource, TEntity>,
         onFrame: (dtMs: number) => void
     ): void;
 

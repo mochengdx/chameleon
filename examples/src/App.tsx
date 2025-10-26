@@ -10,6 +10,7 @@ import { EnvironmentSkyboxPlugin } from "./plugins/EnvironmentSkyboxPlugin";
 
 import Layout from "./layout";
 import SceneCard from "./components/SceneCard";
+import ReplaceSceneCard from "./components/ReplaceSceneCard";
 
 // import { attachInterceptorToPipeline } from "@chameleon/core";
 
@@ -94,10 +95,12 @@ export default function App() {
 
   return (
     <Layout >
-      <SceneCard title="only load gltf modeal" description="use GLTFLoaderPlugin load gltf" onCanvasReady={(loadBasicDemo)} />
+      {/* <SceneCard title="only load gltf modeal" description="use GLTFLoaderPlugin load gltf" onCanvasReady={(loadBasicDemo)} />
       <SceneCard title="Load GLTF and set evn" description="use GLTFLoaderPlugin load gltf" onCanvasReady={(loadGltfandSetEnvDemo)} />
       <SceneCard title="Load GLTF and and interaction with model" description="try to load" onCanvasReady={(loadBasicGltfAndFreeControlDemo)} />
-      <SceneCard externalNode={<div></div>} title="Replace GLTF" description="try to load" onCanvasReady={(loadBasicGltfAndFreeControlDemo)} />
+      <ReplaceSceneCard/> */}
+      <ReplaceSceneCard/> 
+
     </Layout>
   );
 

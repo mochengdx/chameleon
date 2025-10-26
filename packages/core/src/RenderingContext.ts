@@ -7,7 +7,6 @@ export type RenderRequest = {
   options?: Record<string, any>;
   userData?: any;
 };
-
 /**
  * RenderingContext - parametrized so every field can carry concrete engine/resource types.
  * TResources is the adapter-specific resource/parsed shape (e.g. glTF AST, binary buffer, typed model).
@@ -23,22 +22,39 @@ export interface RenderingContext<
   request: RenderRequest;
   container: HTMLCanvasElement | HTMLElement;
   adapter: EngineAdapter<TEngine, TScene, TCamera, TOptions>;
-
-  // rawAssets: the adapter's loadResources result (one or many)
-  rawAssets?: TResources | TResources[];
-
   // parsedGLTF kept for backwards-compat / convenience; can map to TResources if appropriate
   parsedGLTF?: {targetEngineEntity:TEntity, animations?: any[]; meshes?: any[] };
-
-  // strongly typed engine handles
-  engineHandles: { engine: TEngine; scene: TScene; camera: TCamera };
-
-  metadata: Record<string, any>;
   abortController: AbortController;
   abortSignal: AbortSignal;
-
-  renderState?: { running?: boolean; frameCount?: number; lastError?: any };
-
-  // pipeline typed with the same generics so plugins can access strongly-typed pipeline
-  pipeline?: Pipeline<TEngine, TScene, TCamera, TOptions>;
+  pipeline?: Pipeline;
+  renderState?: {
+    running?: boolean;
+    frameCount?: number;
+    lastError?: any;
+  };
+  engineHandles?: {
+    engine?: TEngine;
+    scene?: TScene;
+    camera?: TCamera;
+    [key: string]: any;
+  };
+  /**
+   * metadata
+   * - place for plugins to store runtime data without polluting the root of ctx
+   * - standard keys used by pipeline/plugins:
+   *   - stagesCompleted: record of completed stage -> boolean
+   *   - stageLocks: record of running stage -> boolean (concurrent guard)
+   *   - stageCleanups: optional per-stage array of cleanup callbacks to run before re-running a stage
+   */
+  metadata?: {
+    stagesCompleted?: Record<string, boolean>;
+    stageLocks?: Record<string, boolean>;
+    // stageCleanups[stageName] = array of async/sync cleanup functions invoked before re-running that stage
+    stageCleanups?: Record<
+      string,
+      Array<(ctx: RenderingContext<TEngine, TScene, TCamera>) => void | Promise<void>>
+    >;
+    [key: string]: any;
+  };
+  [key: string]: any;
 }

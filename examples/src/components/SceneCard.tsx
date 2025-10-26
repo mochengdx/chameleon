@@ -19,7 +19,6 @@ export default function SceneCard({
     id,
     title = "Title",
     description = "",
-    canvasHeight = 160,
     className = "",
     externalNode,
     onCanvasReady,
@@ -65,6 +64,7 @@ export default function SceneCard({
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
+        console.log('canvas ready');
 
         // allow external init
         try { onCanvasReady?.(canvas); } catch { /* swallow */ }
@@ -88,7 +88,7 @@ export default function SceneCard({
         //   if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
         //   if (roRef.current) { roRef.current.disconnect(); roRef.current = null; }
         // };
-    }, [canvasHeight, onCanvasReady]);
+    }, []);
 
     return (
         <div
