@@ -15,15 +15,15 @@ import { isElementOfType } from "./utils";
  * - Support string, array, and in-memory sources.
  * - Preserve raw and parsed assets on ctx for downstream plugins.
  */
-export class GLTFLoaderPlugin implements IPlugin {
-  public readonly name = "GLTFLoaderPlugin";
+export class PipelineAdapterPlugin implements IPlugin {
+  public readonly name = "PipelineAdapterPlugin";
 
   public apply(pipeline: Pipeline): void {
     // 1) Ensure engine is initialized before doing resource work.
     pipeline.hooks.initEngine.tapPromise(this.name, async (ctx: RenderingContext) => {
       // allow HTMLElement (adapter may support canvas or other mount points)
       if (!ctx.container || !isElementOfType(ctx.container, HTMLElement)) {
-        throw new Error("GLTFLoaderPlugin: container must be an HTMLElement");
+        throw new Error("PipelineAdapterPlugin: container must be an HTMLElement");
       }
 
       // prefer adapter.initEngine when implemented; allow adapter to mutate ctx
@@ -33,7 +33,7 @@ export class GLTFLoaderPlugin implements IPlugin {
         }
       } catch (err) {
         // attach error and rethrow so pipeline can clean up
-        try { pipeline.logger?.error?.("GLTFLoaderPlugin:initEngine error", err); } catch { }
+        try { pipeline.logger?.error?.("PipelineAdapterPlugin:initEngine error", err); } catch { }
         throw err;
       }
 
@@ -81,7 +81,7 @@ export class GLTFLoaderPlugin implements IPlugin {
           ctx.rawAssets = loaded;
         }
       } catch (err) {
-        try { pipeline.logger?.error?.("GLTFLoaderPlugin:resourceLoad error", err); } catch { }
+        try { pipeline.logger?.error?.("PipelineAdapterPlugin:resourceLoad error", err); } catch { }
         throw err;
       }
 
@@ -124,7 +124,7 @@ export class GLTFLoaderPlugin implements IPlugin {
           ctx.parsedGLTF = parsed.length === 1 ? parsed[0] : parsed;
         }
       } catch (err) {
-        try { pipeline.logger?.error?.("GLTFLoaderPlugin:resourceParse error", err); } catch { }
+        try { pipeline.logger?.error?.("PipelineAdapterPlugin:resourceParse error", err); } catch { }
         // return false to signal validation failure if desired by pipeline consumers
         throw err;
       }
@@ -139,7 +139,7 @@ export class GLTFLoaderPlugin implements IPlugin {
           await ctx.adapter.buildScene(ctx.parsedGLTF, ctx);
         }
       } catch (err) {
-        try { pipeline.logger?.error?.("GLTFLoaderPlugin:buildScene error", err); } catch { }
+        try { pipeline.logger?.error?.("PipelineAdapterPlugin:buildScene error", err); } catch { }
         throw err;
       }
 

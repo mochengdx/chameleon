@@ -8,11 +8,12 @@
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
-    "declarationDir": "dist",
+    "declarationDir": "./dist",
     "sourceMap": true,
     "baseUrl": "./",
     "emitDeclarationOnly": true,
     "skipLibCheck": true,
+    "rootDir": "src",
     "paths": {
       "@/*": ["src/*"],
        "@chameleon/core": ["../../core/src"]

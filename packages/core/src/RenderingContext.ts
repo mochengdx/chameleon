@@ -5,7 +5,7 @@ export type RenderRequest = {
   id: string;
   source: string;
   options?: Record<string, any>;
-  userData?: Object;
+  userData?: any;
 };
 
 /**

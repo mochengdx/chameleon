@@ -11,9 +11,13 @@
   },
   "dependencies": {
     "@chameleon/core": "workspace:*",
-     "@chameleon/adapters": "workspace:*"
+    "@chameleon/adapters": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "@galacean/engine": "^1.6.5",
+    "@galacean/engine-toolkit": "^1.6.0"
   }
 }

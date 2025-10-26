@@ -1,11 +1,12 @@
 import React, { useRef, useEffect, useCallback } from "react";
 
-export type SiderProps = {
+export type SceneCardProps = {
     id?: string;
     title?: string;
     description?: string;
     canvasHeight?: number; // px
     className?: string;
+    externalNode?: React.ReactNode;
     onCanvasReady?: (canvas: HTMLCanvasElement) => void;
 };
 
@@ -14,18 +15,17 @@ export type SiderProps = {
  * - One-row list item with left (title + description) and right (canvas demo).
  * - Uses Tailwind CSS utility classes. Each item occupies one row with vertical spacing.
  */
-export default function Sider({
+export default function SceneCard({
     id,
     title = "Title",
     description = "",
     canvasHeight = 160,
     className = "",
+    externalNode,
     onCanvasReady,
-}: SiderProps) {
+}: SceneCardProps) {
     const rootId = useRef(id ?? `sider-${Math.random().toString(36).slice(2, 9)}`).current;
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
-    const rafRef = useRef<number | null>(null);
-    const roRef = useRef<ResizeObserver | null>(null);
 
     // simple demo render for canvas when no external renderer is attached
     //   const draw = useCallback((ctx: CanvasRenderingContext2D, t: number) => {
@@ -60,6 +60,7 @@ export default function Sider({
     //     const ctx = canvas.getContext("2d");
     //     if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     //   }, []);
+
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -119,6 +120,7 @@ export default function Sider({
                                 {description}
                             </p>
                         ) : null}
+                        {externalNode}
                     </div>
                 </div>
 
@@ -128,7 +130,7 @@ export default function Sider({
                         <canvas
                             ref={canvasRef}
                             className="block w-full h-full bg-white dark:bg-black rounded-xl"
-                            style={{ display: "block", width: "100%", height: "100%" }}
+                            style={{ display: "block", width: "100%", height: "100%",touchAction: "none" }}
                         />
                     </div>
                 </div>

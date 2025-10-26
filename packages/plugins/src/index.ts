@@ -1,5 +1,4 @@
-export { GLTFLoaderPlugin } from "./GLTFLoaderPlugin";
-export { ValidatorPlugin } from "./ValidatorPlugin";
-export { CustomShaderPlugin } from "./CustomShaderPlugin";
-export { VideoTexturePlugin } from "./VideoTexturePlugin";
-export { DeviceStatePlugin } from "./DeviceStatePlugin";
+export * from "./PipelineAdapterPlugin";
+export * from "./galaceanPlugins/GalaceanCameraControlPlugin";
+export * from "./galaceanPlugins/GalaceanInteractionPlugin";
+export * from "./galaceanPlugins/galaceanUtils";
