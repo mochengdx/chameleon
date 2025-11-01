@@ -11,8 +11,13 @@ import {
 export class EnvironmentSkyboxPlugin implements IPlugin {
     name = 'EnvironmentSkyboxPlugin'
     apply(pipeline: Pipeline) {
+        console.log('EnvironmentSkyboxPlugin applied',pipeline.hooks.buildScene.isUsed);
+        
         pipeline.hooks.buildScene.tapPromise(this.name, async (ctx: RenderingContext<WebGLEngine, Scene>) => {
             const { scene, engine } = ctx.engineHandles ?? {};
+            if (!scene || !engine) {
+                return ctx;
+            }
             const typeScene = scene;
             typeScene.background.mode = BackgroundMode.Sky;
             typeScene.background.sky.mesh = PrimitiveMesh.createCuboid(engine, 1, 1, 1);

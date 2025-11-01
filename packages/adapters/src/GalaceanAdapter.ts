@@ -6,7 +6,7 @@ import {
   WebGLGraphicDeviceOptions,
   AssetType,
   GLTFResource,
-  Entity,
+  Entity
 } from "@galacean/engine";
 import { SUPPORTED_ADAPTERS } from "./constants";
 
@@ -14,14 +14,7 @@ import { SUPPORTED_ADAPTERS } from "./constants";
  * SpecRenderingContext - strongly-typed alias for this adapter's RenderingContext.
  * Keeps method signatures precise and helps type inference at use sites.
  */
-type SpecRenderingContext = RenderingContext<
-  GLEngine,
-  Scene,
-  Entity,
-  WebGLGraphicDeviceOptions,
-  GLTFResource,
-  Entity
->;
+type SpecRenderingContext = RenderingContext<GLEngine, Scene, Entity, WebGLGraphicDeviceOptions, GLTFResource, Entity>;
 
 /**
  * GalaceanAdapter
@@ -38,7 +31,8 @@ type SpecRenderingContext = RenderingContext<
  *   improving error messages, and making per-frame timing accurate.
  */
 export class GalaceanAdapter
-  implements EngineAdapter<GLEngine, Scene, Entity, GLTFResource, Entity, WebGLGraphicDeviceOptions> {
+  implements EngineAdapter<GLEngine, Scene, Entity, GLTFResource, Entity, WebGLGraphicDeviceOptions>
+{
   // adapter id for logging/diagnostics
   name = SUPPORTED_ADAPTERS.galacean;
 
@@ -46,6 +40,10 @@ export class GalaceanAdapter
   engine!: GLEngine;
   scene!: Scene;
   camera!: Entity;
+
+  // internal render-loop handle
+  private _rafId?: number;
+  private _renderLoopRunning = false;
 
   /**
    * initEngine
@@ -58,17 +56,17 @@ export class GalaceanAdapter
     const canvas = container as HTMLCanvasElement;
     // create engine with optional graphicDeviceOptions
     const graphicDeviceOptions = (options as WebGLGraphicDeviceOptions) || undefined;
-    this.engine = await GLEngine.create({ canvas, graphicDeviceOptions });
-
-    // obtain the active scene and create a root + camera entity
+    try {
+      this.engine = await GLEngine.create({ canvas, graphicDeviceOptions });
+    } catch (err) {
+      // bubble a clear error
+      throw new Error(`GalaceanAdapter.initEngine: failed to create engine - ${(err as Error)?.message || err}`);
+    }
     this.scene = this.engine.sceneManager.activeScene;
     const rootEntity = this.scene.createRootEntity("root");
-
     // create camera child and add Camera component
     this.camera = rootEntity.createChild("camera");
     this.camera.addComponent(Camera);
-
-    // start engine loop and ensure canvas size matches client
     this.engine.run();
     try {
       this.engine.canvas.resizeByClientSize();
@@ -91,13 +89,41 @@ export class GalaceanAdapter
       throw new Error("GalaceanAdapter.loadResource: engine not initialized");
     }
 
-    // use engine's resource manager to load a GLTF asset
-    const asset = await this.engine.resourceManager.load<GLTFResource>({
-      type: AssetType.GLTF,
-      url: src,
-    });
+    // attempt GC if available (best-effort)
+    try {
+      engine.resourceManager?.gc?.();
+    } catch (error) {
+      // best-effort; do not prevent loading
+    }
 
-    return asset;
+    // prefer engine resource manager if present
+    if (engine.resourceManager && typeof engine.resourceManager.load === "function") {
+      try {
+        const asset = await engine.resourceManager.load<GLTFResource>({
+          type: AssetType.GLTF,
+          url: src
+        });
+        if (!asset) throw new Error("engine.resourceManager.load returned falsy asset");
+        return asset;
+      } catch (err) {
+        throw new Error(
+          `GalaceanAdapter.loadResource: failed to load GLTF from '${src}' - ${(err as Error)?.message || err}`
+        );
+      }
+    }
+    // fallback -> try fetch + treat as ArrayBuffer
+    try {
+      const res = await fetch(src);
+      if (!res.ok) throw new Error(`http ${res.status}`);
+      const buf = await res.arrayBuffer();
+      // Note: without engine resourceManager, we cannot create GLTFResource;
+      // return as unknown and let upstream adaptors handle it.
+      return buf as unknown as GLTFResource;
+    } catch (err) {
+      throw new Error(
+        `GalaceanAdapter.loadResource: network fallback failed for '${src}' - ${(err as Error)?.message || err}`
+      );
+    }
   }
 
   /**
@@ -112,7 +138,18 @@ export class GalaceanAdapter
     }
 
     // instantiate the scene root from the GLTF resource
-    const gltfSceneRoot = assets.instantiateSceneRoot();
+    let gltfSceneRoot: Entity;
+    try {
+      if (typeof (assets as any).instantiateSceneRoot === "function") {
+        gltfSceneRoot = (assets as any).instantiateSceneRoot();
+      } else {
+        throw new Error("GLTFResource missing instantiateSceneRoot");
+      }
+    } catch (err) {
+      throw new Error(
+        `GalaceanAdapter.parseResource: failed to instantiate scene root - ${(err as Error)?.message || err}`
+      );
+    }
 
     // keep backwards-compatible parsedGLTF shape on context for other plugins
     try {
@@ -146,7 +183,16 @@ export class GalaceanAdapter
 
     // attach parsed entity to the scene root
     const rootEntity = scene.getRootEntity();
-    rootEntity!.addChild(parsedEntity);
+    if (!rootEntity || typeof rootEntity.addChild !== "function") {
+      throw new Error("GalaceanAdapter.buildScene: scene root entity not available or invalid");
+    }
+    try {
+      rootEntity.addChild(parsedEntity);
+    } catch (err) {
+      throw new Error(
+        `GalaceanAdapter.buildScene: failed to add parsed entity to scene - ${(err as Error)?.message || err}`
+      );
+    }
     return ctx;
   }
 
@@ -156,14 +202,19 @@ export class GalaceanAdapter
    * - Respects ctx.abortSignal for cooperative cancellation.
    */
   startRenderLoop(ctx: SpecRenderingContext, onFrame: (dt: number) => void) {
-    let last = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
+    if (this._renderLoopRunning) return;
+    this._renderLoopRunning = true;
+    let last = typeof performance !== "undefined" && performance.now ? performance.now() : Date.now();
 
     const tick = () => {
-      // stop loop if run has been aborted
-      if (ctx.abortSignal && ctx.abortSignal.aborted) return;
+      // stop loop if run has been aborted or adapter disposed
+      if ((ctx.abortSignal && ctx.abortSignal.aborted) || !this._renderLoopRunning) {
+        this._renderLoopRunning = false;
+        return;
+      }
 
       // compute delta time accurately
-      const now = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
+      const now = typeof performance !== "undefined" && performance.now ? performance.now() : Date.now();
       const dt = now - last;
       last = now;
 
@@ -184,11 +235,10 @@ export class GalaceanAdapter
       }
 
       // schedule next frame
-      requestAnimationFrame(tick);
+      this._rafId = requestAnimationFrame(tick);
     };
 
-    // kick off the loop
-    requestAnimationFrame(tick);
+    this._rafId = requestAnimationFrame(tick);
   }
 
   /**
@@ -196,10 +246,26 @@ export class GalaceanAdapter
    * - Cleanly destroy the engine instance if present.
    */
   dispose() {
+    // stop render loop first
+    try {
+      this._renderLoopRunning = false;
+      if (typeof this._rafId !== "undefined") {
+        cancelAnimationFrame(this._rafId);
+        this._rafId = undefined;
+      }
+    } catch {
+      // swallow
+    }
+
     try {
       this?.engine?.destroy();
     } catch {
       // ignore destroy errors to avoid throwing during cleanup
+    } finally {
+      // clear references to help GC
+      this.engine = undefined;
+      this.scene = undefined;
+      this.camera = undefined;
     }
   }
 }

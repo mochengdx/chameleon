@@ -75,8 +75,8 @@ export default function App() {
     // attach plugins
     const plugins = [
       new PipelineAdapterPlugin(),
-      new DefCameraControlPlugin(),
-      new DefGalaceanInteractionPlugin()
+      // new DefCameraControlPlugin(),
+      // new DefGalaceanInteractionPlugin()
     ];
     plugins.forEach((p) => pipeline.use(p));
 

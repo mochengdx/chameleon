@@ -114,7 +114,7 @@ export class Pipeline<TEngine = any, TScene = any, TCamera = any, TOptions = any
     for (const name of names) {
       ensureNotAborted();
       const hook = this.hooks[name] as any; // will cast to concrete types below
-
+      console.log("run stage:", name);
       if (!hook) throw new Error(`Unknown hook "${String(name)}"`);
 
       // dispatch based on stage name -> use correct tapable API and keep types explicit
