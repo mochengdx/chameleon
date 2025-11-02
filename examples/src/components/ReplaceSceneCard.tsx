@@ -118,7 +118,7 @@ export default function ReplaceSceneCard({}) {
 
     const data: RenderRequest = {
       id: "demo",
-      source: "https://mdn.alipayobjects.com/chain_myent/afts/file/G4BCQYX6t4gAAAAAAAAAAAAADvN2AQBr"
+      source: "https://gw.alipayobjects.com/os/bmw-prod/93196534-bab3-4559-ae9f-bcb3e36a6419.glb"
     };
     let ctx: RenderingContext = {} as RenderingContext;
     try {
@@ -139,7 +139,7 @@ export default function ReplaceSceneCard({}) {
       // new PipelineAdapterPlugin(),
       // new DefCameraControlPlugin(),
       // new DefGalaceanInteractionPlugin(),
-      // new EnvironmentSkyboxPlugin()
+      new EnvironmentSkyboxPlugin()
     ];
     plugins.forEach((p) => pipeline!.use(p));
     const data: RenderRequest = {
@@ -162,8 +162,17 @@ export default function ReplaceSceneCard({}) {
     if (!pipieRef?.current?.pipeline) {
       return;
     }
-    const { pipeline, ctx } = pipieRef.current;
+    const { pipeline } = pipieRef.current;
     pipeline.use(new EnvironmentSkyboxPlugin());
+  }, []);
+
+
+  const handleUninstall = useCallback(async () => {
+    if (!pipieRef?.current?.pipeline) {
+      return;
+    }
+    const { pipeline } = pipieRef.current;
+    pipeline.uninstall("EnvironmentSkyboxPlugin");
   }, []);
 
   useEffect(() => {}, []);
@@ -174,6 +183,7 @@ export default function ReplaceSceneCard({}) {
         <>
           <ActionButton onClick={handleReplace}>Dynamic model replacement </ActionButton>
           <ActionButton onClick={handleSkyBox}>Use Skybox </ActionButton>
+           <ActionButton onClick={handleUninstall}>Uninstall </ActionButton>
         </>
       }
       title="Dynamic Model Replacement via Chameleon Plugin System"

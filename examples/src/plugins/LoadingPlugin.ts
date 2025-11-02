@@ -2,8 +2,8 @@ import type { IPlugin, Pipeline, RenderingContext } from "@chameleon/core";
 
 export class LoadingPlugin implements IPlugin {
   name = "LoadingPlugin";
-  loading: boolean = true;
-  updateLoading: (loading: boolean) => void = () => {};
+  
+  updateLoading: (loading: boolean) => void;
 
   constructor(updateLoading: (loading: boolean) => void) {
     this.updateLoading = updateLoading;

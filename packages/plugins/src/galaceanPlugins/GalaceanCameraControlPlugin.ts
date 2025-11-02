@@ -98,7 +98,7 @@ export class DefCameraControlPlugin implements IPlugin {
         const { center, radius } = computeModelBoundingSphere(parsedEntity);
         cameraEntity.transform.setPosition(center.x, center.y, center.z + radius * 4);
 
-        // Ensure camera component exists         console.log('Computed bounding sphere:', { center, radius });
+        // Ensure camera component exists
         const camera = cameraEntity.getComponent(Camera);
         if (!camera) {
             throw new Error("DefCameraControlPlugin: Camera component not found on camera entity");

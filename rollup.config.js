@@ -67,7 +67,6 @@ const pkgs = fs
     console.log("Building packages:", pkgs.map(p => p.pkgJson.name).join(", "));
   }
 
-  console.log("pkgs:", pkgs);
 export default pkgs.map((pkg) => makeRollupConfigForPkg(pkg));
 // export default rollupBase({
 //   input: path.resolve(__dirname, "packages/core/src/index.ts"),

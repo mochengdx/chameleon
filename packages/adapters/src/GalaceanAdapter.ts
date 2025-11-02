@@ -37,9 +37,9 @@ export class GalaceanAdapter
   name = SUPPORTED_ADAPTERS.galacean;
 
   // optional runtime handles populated during initEngine
-  engine!: GLEngine;
-  scene!: Scene;
-  camera!: Entity;
+  engine?: GLEngine;
+  scene?: Scene;
+  camera?: Entity;
 
   // internal render-loop handle
   private _rafId?: number;
@@ -88,17 +88,24 @@ export class GalaceanAdapter
     if (!engine) {
       throw new Error("GalaceanAdapter.loadResource: engine not initialized");
     }
+    console.log(`GalaceanAdapter.loadResource: loading resource from '${src}'`);
 
-    // attempt GC if available (best-effort)
-    try {
-      engine.resourceManager?.gc?.();
-    } catch (error) {
-      // best-effort; do not prevent loading
-    }
+    // // attempt GC if available (best-effort)
+    // try {
+    //   engine.resourceManager?.gc?.();
+    // } catch (error) {
+    //   // best-effort; do not prevent loading
+    // }
 
     // prefer engine resource manager if present
     if (engine.resourceManager && typeof engine.resourceManager.load === "function") {
       try {
+        // this is not best proactice, but we clear the URL cache to force reloads
+        // @ts-ignore
+        // if (engine.resourceManager?._assetUrlPool?.[src]) {
+        //   // @ts-ignore
+        //   engine.resourceManager._assetUrlPool[src] = undefined; // clear cache for src to force reload
+        // }
         const asset = await engine.resourceManager.load<GLTFResource>({
           type: AssetType.GLTF,
           url: src
@@ -106,6 +113,13 @@ export class GalaceanAdapter
         if (!asset) throw new Error("engine.resourceManager.load returned falsy asset");
         return asset;
       } catch (err) {
+        // attempt GC if available (best-effort)
+        try {
+          engine.resourceManager?.gc?.();
+        } catch (error) {
+          // best-effort; do not prevent loading
+        }
+
         throw new Error(
           `GalaceanAdapter.loadResource: failed to load GLTF from '${src}' - ${(err as Error)?.message || err}`
         );
@@ -140,8 +154,8 @@ export class GalaceanAdapter
     // instantiate the scene root from the GLTF resource
     let gltfSceneRoot: Entity;
     try {
-      if (typeof (assets as any).instantiateSceneRoot === "function") {
-        gltfSceneRoot = (assets as any).instantiateSceneRoot();
+      if (typeof assets?.instantiateSceneRoot === "function") {
+        gltfSceneRoot = assets?.instantiateSceneRoot();
       } else {
         throw new Error("GLTFResource missing instantiateSceneRoot");
       }
@@ -153,7 +167,7 @@ export class GalaceanAdapter
 
     // keep backwards-compatible parsedGLTF shape on context for other plugins
     try {
-      (ctx as any).parsedGLTF = { targetEngineEntity: gltfSceneRoot };
+      ctx.parsedGLTF = { targetEngineEntity: gltfSceneRoot };
     } catch {
       // non-fatal: ctx may be frozen in some tests; parsed entity is still returned
     }
@@ -174,8 +188,7 @@ export class GalaceanAdapter
     }
 
     // prefer parsed from context (backwards-compatible) but accept parsed parameter if provided
-    const parsedEntity: Entity | undefined =
-      (ctx as any).parsedGLTF?.targetEngineEntity ?? (parsed as Entity | undefined);
+    const parsedEntity: Entity | undefined = ctx.parsedGLTF?.targetEngineEntity ?? (parsed as Entity | undefined);
 
     if (!parsedEntity) {
       throw new Error("GalaceanAdapter.buildScene: no parsed GLTF entity available to attach");

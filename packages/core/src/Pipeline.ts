@@ -1,4 +1,4 @@
-import { AsyncSeriesHook, AsyncSeriesWaterfallHook, AsyncSeriesBailHook, AsyncParallelHook, SyncHook } from "tapable";
+import { AsyncSeriesHook, AsyncSeriesWaterfallHook, AsyncSeriesBailHook, AsyncParallelHook, SyncHook, Hook } from "tapable";
 import type { RenderingContext, RenderRequest } from "./RenderingContext";
 import { Logger } from "./Logger";
 import { EngineAdapter } from "./EngineAdapter";
@@ -49,9 +49,10 @@ export class Pipeline<TEngine = any, TScene = any, TCamera = any, TOptions = any
   /**
    * Construct a Pipeline with a concrete EngineAdapter.
    * @param adapter The engine adapter responsible for engine-specific operations.
-   */ constructor(public adapter: EngineAdapter<TEngine, TScene, TCamera, TOptions>) {
-    // assign adapter (explicit for clarity)
-    this.adapter = adapter;
+   */ 
+  constructor(public adapter: EngineAdapter<TEngine, TScene, TCamera, TOptions>) {
+    // // assign adapter (explicit for clarity)
+    // this.adapter = adapter;
 
     // instantiate hooks with argument names to improve debugging/stack traces
     this.hooks = {
@@ -73,6 +74,55 @@ export class Pipeline<TEngine = any, TScene = any, TCamera = any, TOptions = any
       throw new Error(`Hook "${String(name)}" does not exist in Pipeline`);
     }
     return this.hooks[name];
+  }
+
+    // helper: remove taps with the given pluginName from a single hook, return whether removed any
+  private _removeTapsFromHook(hook: AnyStageHook | Hook, pluginName: string): boolean {
+    if (!hook || !Array.isArray(hook.taps)) return false;
+    const before = hook.taps.length;
+    // keep taps except those from pluginName
+    hook.taps = hook.taps.filter((t: any) => t && t.name !== pluginName);
+    // clear compiled/cache fields so hook will recompile next time it's called
+    // different hook types may cache different keys; remove commonly used cache names
+    try {
+      // delete hook._call;
+      // delete hook._promise;
+      // delete hook._x;
+      // delete hook._tap;
+    } catch {}
+    return hook.taps.length !== before;
+  }
+
+
+  /**
+   * Uninstall by plugin name (or plugin instance name)
+   * - Removes all taps registered with the given plugin name across all stages.
+   * - Returns true if any tap was removed.
+   */
+  public uninstall(pluginName: string): boolean {
+    if (!pluginName) return false;
+    let removedAny = false;
+    const hookKeys = Object.keys(this.hooks) as (keyof StageHooks)[];
+    for (const k of hookKeys) {
+      const hook = (this.hooks as any)[k];
+      try {
+        const removed = this._removeTapsFromHook(hook, pluginName);
+        if (removed) removedAny = true;
+      } catch (e) {
+        try { this.logger?.error?.(`Pipeline.uninstall: failed to remove taps for ${String(k)} - ${pluginName}`, e); } catch {}
+      }
+    }
+    return removedAny;
+  }
+
+
+  /**
+   * uninstallPlugin - convenience overload: accept plugin instance or name
+   */
+  public uninstallPlugin(plugin: { name?: string } | string): boolean {
+    const name = typeof plugin === "string" ? plugin : plugin?.name;
+    if (!name) return false;
+    return this.uninstall(name);
   }
 
   /**

@@ -62,7 +62,7 @@
   },
   // Include only package sources and local type helpers.
   "include": [
-    "src/**/*",
+    "src/**/*"
   ],
   // Exclude build / generated / external folders.
   "exclude": [
