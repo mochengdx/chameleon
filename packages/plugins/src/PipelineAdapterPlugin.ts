@@ -38,7 +38,8 @@ export class PipelineAdapterPlugin implements IPlugin {
         addStageCleanup(ctx, "initEngine", async (c: RenderingContext) => {
           try {
             if (typeof c.adapter.dispose === "function") {
-              await c.adapter.dispose();
+              // don't double-dispose if adapter.dispose is called elsewhere;
+              // await c.adapter.dispose();
             }
           } catch (e) {
             try {
@@ -56,8 +57,6 @@ export class PipelineAdapterPlugin implements IPlugin {
       } finally {
         unlockStage(ctx, "initEngine");
       }
-
-      return ctx;
     });
 
     // 2) Load resources (support string(s) and in-memory sources)
@@ -121,7 +120,7 @@ export class PipelineAdapterPlugin implements IPlugin {
           try {
             c?.parsedGLTF?.targetEngineEntity?.destroy?.();
             c.parsedGLTF = undefined;
-            c.rawAssets = [];
+            c.rawAssets = undefined;
           } catch {}
         });
 
@@ -151,7 +150,7 @@ export class PipelineAdapterPlugin implements IPlugin {
         if (typeof ctx.adapter.parseResource === "function") {
           const result = await ctx.adapter.parseResource(raw, ctx);
           // adapter may return a parsed representation or an engine-specific entity
-          ctx.parsedGLTF = { targetEngineEntity: result } as any;
+          ctx.parsedGLTF = { targetEngineEntity: result };
         } else {
           const parsed = await Promise.all(
             raw.map(async (r: any) => {
@@ -223,7 +222,7 @@ export class PipelineAdapterPlugin implements IPlugin {
             } else {
               const target = c?.parsedGLTF?.targetEngineEntity || null;
               try {
-                if (target && typeof (target as any).destroy === "function") {
+                if (target && typeof target?.destroy === "function") {
                   target.destroy();
                   c.pipeline?.logger?.info?.(
                     "PipelineAdapterPlugin: disposed targetEngineEntity during buildScene cleanup"
@@ -245,9 +244,8 @@ export class PipelineAdapterPlugin implements IPlugin {
     // but Pipeline or consumers should call runStageCleanups at appropriate times). For safety, register
     // a small post-process cleanup runner to demonstrate usage.
     pipeline.hooks.postProcess.tapPromise(this.name, async (ctx: RenderingContext) => {
-      // Post-process shouldn't clear permanent resources, but we can run transient cleanups if needed.
-      // Here we do nothing by default; but keep hook present to show metadata usage.
-      return ctx;
+      // Post-process shouldn't clear permanent resources; keep hook present for extensions.
+      // no-op by default
     });
 
     // Dispose: run all stage cleanups in a safe order if pipeline triggers dispose.

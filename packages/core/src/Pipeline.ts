@@ -167,83 +167,92 @@ export class Pipeline<TEngine = any, TScene = any, TCamera = any, TOptions = any
       console.log("run stage:", name);
       if (!hook) throw new Error(`Unknown hook "${String(name)}"`);
 
-      // dispatch based on stage name -> use correct tapable API and keep types explicit
-      switch (name) {
-        case "initEngine":
-        case "resourceLoad":
-        case "resourceParse":
-        case "buildScene":
-        case "postProcess":
-          // these hooks expose a promise() method (AsyncSeries* variants)
-          if (typeof hook.promise === "function") {
-            const result = await hook.promise(ctx);
-            if (result && typeof result === "object" && (name === "resourceLoad" || name === "buildScene")) {
-              ctx = result as RenderingContext<TEngine, TScene, TCamera>;
-            }
-            if (name === "resourceParse" && result === false) {
-              throw new Error("Pipeline: resourceParse validation failed (bail returned false)");
-            }
-          } else {
-            // fallback for unexpected shapes: try callAsync/call
-            if (typeof hook.callAsync === "function") {
-              await new Promise<void>((resolve, reject) =>
-                hook.callAsync(ctx, (err?: any) => (err ? reject(err) : resolve()))
-              );
-            } else if (typeof hook.call === "function") {
-              hook.call(ctx);
-            } else {
-              throw new Error(`Hook "${String(name)}" unsupported shape`);
-            }
-          }
-          break;
-
-        case "renderLoop":
-          // renderLoop is AsyncParallelHook: support promise() or callAsync()
-          if (typeof hook.callAsync === "function") {
-            // callAsync is used elsewhere for per-frame non-await invocation;
-            // here we await the promise() for one-time execution if available.
+      try {
+        // dispatch based on stage name -> use correct tapable API and keep types explicit
+        switch (name) {
+          case "initEngine":
+          case "resourceLoad":
+          case "resourceParse":
+          case "buildScene":
+          case "postProcess":
+            // these hooks expose a promise() method (AsyncSeries* variants)
             if (typeof hook.promise === "function") {
-              await hook.promise(ctx);
+              const result = await hook.promise(ctx);
+              if (result && typeof result === "object" && (name === "resourceLoad" || name === "buildScene")) {
+                ctx = result as RenderingContext<TEngine, TScene, TCamera>;
+              }
+              if (name === "resourceParse" && result === false) {
+                throw new Error("Pipeline: resourceParse validation failed (bail returned false)");
+              }
             } else {
-              await new Promise<void>((resolve, reject) =>
-                hook.callAsync(ctx, (err?: any) => (err ? reject(err) : resolve()))
-              );
+              // fallback for unexpected shapes: try callAsync/call
+              if (typeof hook.callAsync === "function") {
+                await new Promise<void>((resolve, reject) =>
+                  hook.callAsync(ctx, (err?: any) => (err ? reject(err) : resolve()))
+                );
+              } else if (typeof hook.call === "function") {
+                hook.call(ctx);
+              } else {
+                throw new Error(`Hook "${String(name)}" unsupported shape`);
+              }
             }
-          } else if (typeof hook.promise === "function") {
-            await hook.promise(ctx);
-          } else {
-            throw new Error(`Hook "${String(name)}" unsupported shape`);
-          }
-          break;
+            break;
 
-        case "dispose":
-          // dispose is SyncHook -> call synchronously
-          if (typeof hook.call === "function") {
-            hook.call(ctx);
-          } else {
-            // fallback to other shapes if necessary
+          case "renderLoop":
+            // renderLoop is AsyncParallelHook: support promise() or callAsync()
             if (typeof hook.callAsync === "function") {
-              await new Promise<void>((resolve, reject) =>
-                hook.callAsync(ctx, (err?: any) => (err ? reject(err) : resolve()))
-              );
+              // callAsync is used elsewhere for per-frame non-await invocation;
+              // here we await the promise() for one-time execution if available.
+              if (typeof hook.promise === "function") {
+                await hook.promise(ctx);
+              } else {
+                await new Promise<void>((resolve, reject) =>
+                  hook.callAsync(ctx, (err?: any) => (err ? reject(err) : resolve()))
+                );
+              }
             } else if (typeof hook.promise === "function") {
               await hook.promise(ctx);
             } else {
               throw new Error(`Hook "${String(name)}" unsupported shape`);
             }
-          }
-          break;
+            break;
 
-        default:
-          throw new Error(`Unknown hook "${String(name)}"`);
+          case "dispose":
+            // dispose is SyncHook -> call synchronously
+            if (typeof hook.call === "function") {
+              hook.call(ctx);
+            } else {
+              // fallback to other shapes if necessary
+              if (typeof hook.callAsync === "function") {
+                await new Promise<void>((resolve, reject) =>
+                  hook.callAsync(ctx, (err?: any) => (err ? reject(err) : resolve()))
+                );
+              } else if (typeof hook.promise === "function") {
+                await hook.promise(ctx);
+              } else {
+                throw new Error(`Hook "${String(name)}" unsupported shape`);
+              }
+            }
+            break;
+
+          default:
+            throw new Error(`Unknown hook "${String(name)}"`);
+        }
+
+        // mark stage done on ctx.metadata for idempotence checks
+        try {
+          ctx.metadata = ctx.metadata || {};
+          ctx.metadata.stagesCompleted = ctx.metadata.stagesCompleted || {};
+          ctx.metadata.stagesCompleted[String(name)] = true;
+        } catch {}
+      } catch (stageErr) {
+        // record the failed stage for callers (so they can decide adapter disposal behavior)
+        try {
+          ctx.metadata = ctx.metadata || {};
+          ctx.metadata.failedStage = String(name);
+        } catch {}
+        throw stageErr;
       }
-
-      // mark stage done on ctx.metadata for idempotence checks
-      try {
-        ctx.metadata = ctx.metadata || {};
-        ctx.metadata.stagesCompleted = ctx.metadata.stagesCompleted || {};
-        ctx.metadata.stagesCompleted[String(name)] = true;
-      } catch {}
     }
 
     return ctx;
@@ -322,7 +331,10 @@ export class Pipeline<TEngine = any, TScene = any, TCamera = any, TOptions = any
         this.hooks.dispose.call(ctx);
       } catch (_) {}
       try {
-        this.adapter.dispose?.();
+        // Dispose the adapter only if the error occurred during initEngine stage.
+        if (ctx.metadata?.failedStage === "initEngine") {
+          this.adapter.dispose?.();
+        }
       } catch (_) {}
       throw err;
     }
@@ -455,7 +467,10 @@ export class Pipeline<TEngine = any, TScene = any, TCamera = any, TOptions = any
         this.hooks.dispose.call(ctx);
       } catch (_) {}
       try {
-        this.adapter.dispose?.();
+        // Dispose the adapter only if the error occurred during initEngine stage.
+        if (ctx.metadata?.failedStage === "initEngine") {
+          this.adapter.dispose?.();
+        }
       } catch (_) {}
       throw err;
     }

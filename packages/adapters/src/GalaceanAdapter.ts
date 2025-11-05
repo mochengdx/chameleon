@@ -88,7 +88,6 @@ export class GalaceanAdapter
     if (!engine) {
       throw new Error("GalaceanAdapter.loadResource: engine not initialized");
     }
-    console.log(`GalaceanAdapter.loadResource: loading resource from '${src}'`);
 
     // // attempt GC if available (best-effort)
     // try {
@@ -161,7 +160,7 @@ export class GalaceanAdapter
       }
     } catch (err) {
       throw new Error(
-        `GalaceanAdapter.parseResource: failed to instantiate scene root - ${(err as Error)?.message || err}`
+        `GalaceanAdapter.parseResource: failed to instantiate scene root - ${(err as Error)?.message || String(err)}`
       );
     }
 

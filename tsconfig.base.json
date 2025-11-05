@@ -9,6 +9,7 @@
       "esnext",
       "dom"
     ],
+    "jsx": "react-jsx",
      "declarationDir": "types",
     // Module resolution strategy (Node-style resolution).
     "moduleResolution": "node",
@@ -58,9 +59,7 @@
       "node_modules/@types"
     ],
     // Default ambient type packages to include (e.g. node types for tooling).
-    "types": [
-      // "node"
-    ],
+    "types": ["react"],
     // Enable interoperability between CommonJS and ES Modules (allow default imports from CJS).
     "esModuleInterop": true
   },
@@ -72,7 +71,8 @@
   "exclude": [
     "node_modules",
     "dist",
-    "packages/*/tests"
+    "packages/*/tests",
+    "packages/*/test"
   ],
   "references": [
     {
