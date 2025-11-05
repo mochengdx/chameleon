@@ -3,6 +3,7 @@
   "compilerOptions": {
     "module": "esnext",
     "target": "esnext",
+    "jsx": "react-jsx",
     "skipDefaultLibCheck": true,
     "declaration": true,
     "moduleResolution": "node",
@@ -11,6 +12,7 @@
     "declarationDir": "types",
     "sourceMap": true,
     "baseUrl": "./",
+  "types": ["react"],
     "emitDeclarationOnly": true,
     "skipLibCheck": true,
     "paths": {

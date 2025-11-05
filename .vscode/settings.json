@@ -1,0 +1,30 @@
+{
+  // Use the workspace-installed TypeScript for IntelliSense and language features
+  "typescript.tsdk": "node_modules/typescript/lib",
+
+  // Prefer to use the workspace TypeScript in the UI (you can still choose manually)
+  // Note: after setting typescript.tsdk, run "TypeScript: Select TypeScript Version" -> "Use Workspace Version"
+
+  // ESLint extension: use pnpm and auto-detect working directories (monorepo)
+  "eslint.packageManager": "pnpm",
+  "eslint.workingDirectories": [{ "mode": "auto" }],
+
+  // Validate these file types with ESLint
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+
+  // Automatically apply ESLint fixes on save (recommended)
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+
+  // Show ESLint status in status bar (helpful)
+  "eslint.alwaysShowStatus": true,
+
+  // Optional: If you rely on Prettier for formatting, disable formatOnSave or coordinate:
+  // "editor.formatOnSave": false
+}

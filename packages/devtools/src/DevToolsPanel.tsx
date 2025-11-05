@@ -1,4 +1,3 @@
-import React from "react";
 import { useDevtoolsStore } from "./usePipelineDevTools";
 import { PipelineTimeline } from "./PipelineTimeline";
 import { ContextInspector } from "./ContextInspector";

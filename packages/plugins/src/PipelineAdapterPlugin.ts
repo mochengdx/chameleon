@@ -57,8 +57,6 @@ export class PipelineAdapterPlugin implements IPlugin {
       } finally {
         unlockStage(ctx, "initEngine");
       }
-
-      return ctx;
     });
 
     // 2) Load resources (support string(s) and in-memory sources)
@@ -246,9 +244,8 @@ export class PipelineAdapterPlugin implements IPlugin {
     // but Pipeline or consumers should call runStageCleanups at appropriate times). For safety, register
     // a small post-process cleanup runner to demonstrate usage.
     pipeline.hooks.postProcess.tapPromise(this.name, async (ctx: RenderingContext) => {
-      // Post-process shouldn't clear permanent resources, but we can run transient cleanups if needed.
-      // Here we do nothing by default; but keep hook present to show metadata usage.
-      return ctx;
+      // Post-process shouldn't clear permanent resources; keep hook present for extensions.
+      // no-op by default
     });
 
     // Dispose: run all stage cleanups in a safe order if pipeline triggers dispose.
