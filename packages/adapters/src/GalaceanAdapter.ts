@@ -261,7 +261,6 @@ export class GalaceanAdapter
   dispose() {
     // stop render loop first
     try {
-      debugger
       this._renderLoopRunning = false;
       if (typeof this._rafId !== "undefined") {
         cancelAnimationFrame(this._rafId);

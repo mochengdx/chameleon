@@ -331,7 +331,6 @@ export class Pipeline<TEngine = any, TScene = any, TCamera = any, TOptions = any
         this.hooks.dispose.call(ctx);
       } catch (_) {}
       try {
-        debugger
         // Dispose the adapter only if the error occurred during initEngine stage.
         if (ctx.metadata?.failedStage === "initEngine") {
           this.adapter.dispose?.();
