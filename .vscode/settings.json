@@ -19,7 +19,7 @@
 
   // Automatically apply ESLint fixes on save (recommended)
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    "source.fixAll.eslint": "explicit"
   },
 
   // Show ESLint status in status bar (helpful)

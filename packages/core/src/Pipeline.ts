@@ -1,4 +1,11 @@
-import { AsyncSeriesHook, AsyncSeriesWaterfallHook, AsyncSeriesBailHook, AsyncParallelHook, SyncHook, AnyHook } from "tapable";
+import {
+  AsyncSeriesHook,
+  AsyncSeriesWaterfallHook,
+  AsyncSeriesBailHook,
+  AsyncParallelHook,
+  SyncHook,
+  AnyHook
+} from "tapable";
 import type { RenderingContext, RenderRequest } from "./RenderingContext";
 import { Logger } from "./Logger";
 import { EngineAdapter } from "./EngineAdapter";
@@ -49,14 +56,14 @@ export class Pipeline<TEngine = any, TScene = any, TCamera = any, TOptions = any
   /**
    * Construct a Pipeline with a concrete EngineAdapter.
    * @param adapter The engine adapter responsible for engine-specific operations.
-   */ 
+   */
   constructor(public adapter: EngineAdapter<TEngine, TScene, TCamera, TOptions>) {
     // // assign adapter (explicit for clarity)
     // this.adapter = adapter;
 
     // instantiate hooks with argument names to improve debugging/stack traces
     this.hooks = {
-  initEngine: new AsyncSeriesWaterfallHook<[RenderingContext], RenderingContext | undefined>(["ctx"]),
+      initEngine: new AsyncSeriesWaterfallHook<[RenderingContext], RenderingContext | undefined>(["ctx"]),
       resourceLoad: new AsyncSeriesWaterfallHook<[RenderingContext]>(["ctx"]),
       resourceParse: new AsyncSeriesBailHook<[RenderingContext], any>(["ctx"]),
       buildScene: new AsyncSeriesWaterfallHook<[RenderingContext]>(["ctx"]),
@@ -64,6 +71,35 @@ export class Pipeline<TEngine = any, TScene = any, TCamera = any, TOptions = any
       postProcess: new AsyncSeriesHook<[RenderingContext]>(["ctx"]),
       dispose: new SyncHook<[RenderingContext]>(["ctx"])
     };
+  }
+
+  /**
+   * callHookPromise
+   * - Typed convenience helper to invoke a stage hook and normalize different Tapable shapes (promise, callAsync, call).
+   * - Returns whatever the underlying hooks return (often void or a possibly replaced RenderingContext for waterfall hooks).
+   */
+  public async callHookPromise<Name extends keyof StageHooks>(
+    name: Name,
+    ctx: RenderingContext<TEngine, TScene, TCamera>
+  ): Promise<any> {
+    const hook = this.hooks[name] as any;
+    if (!hook) throw new Error(`Unknown hook "${String(name)}"`);
+
+    if (typeof hook.promise === "function") {
+      return await hook.promise(ctx);
+    }
+
+    if (typeof hook.callAsync === "function") {
+      return await new Promise((resolve, reject) =>
+        hook.callAsync(ctx, (err?: any, res?: any) => (err ? reject(err) : resolve(res)))
+      );
+    }
+
+    if (typeof hook.call === "function") {
+      return hook.call(ctx);
+    }
+
+    throw new Error(`Hook "${String(name)}" unsupported shape`);
   }
   /**
    * getHook - safely retrieve a typed hook by name.
@@ -76,7 +112,7 @@ export class Pipeline<TEngine = any, TScene = any, TCamera = any, TOptions = any
     return this.hooks[name];
   }
 
-    // helper: remove taps with the given pluginName from a single hook, return whether removed any
+  // helper: remove taps with the given pluginName from a single hook, return whether removed any
   private _removeTapsFromHook(hook: AnyHook, pluginName: string): boolean {
     if (!hook || !Array.isArray(hook.taps)) return false;
     const before = hook.taps.length;
@@ -93,7 +129,6 @@ export class Pipeline<TEngine = any, TScene = any, TCamera = any, TOptions = any
     return hook.taps.length !== before;
   }
 
-
   /**
    * Uninstall by plugin name (or plugin instance name)
    * - Removes all taps registered with the given plugin name across all stages.
@@ -109,12 +144,13 @@ export class Pipeline<TEngine = any, TScene = any, TCamera = any, TOptions = any
         const removed = this._removeTapsFromHook(hook, pluginName);
         if (removed) removedAny = true;
       } catch (e) {
-        try { this.logger?.error?.(`Pipeline.uninstall: failed to remove taps for ${String(k)} - ${pluginName}`, e); } catch {}
+        try {
+          this.logger?.error?.(`Pipeline.uninstall: failed to remove taps for ${String(k)} - ${pluginName}`, e);
+        } catch {}
       }
     }
     return removedAny;
   }
-
 
   /**
    * uninstallPlugin - convenience overload: accept plugin instance or name
@@ -167,92 +203,92 @@ export class Pipeline<TEngine = any, TScene = any, TCamera = any, TOptions = any
       console.log("run stage:", name);
       if (!hook) throw new Error(`Unknown hook "${String(name)}"`);
 
-      try {
-        // dispatch based on stage name -> use correct tapable API and keep types explicit
-        switch (name) {
-          case "initEngine":
-          case "resourceLoad":
-          case "resourceParse":
-          case "buildScene":
-          case "postProcess":
-            // these hooks expose a promise() method (AsyncSeries* variants)
-            if (typeof hook.promise === "function") {
-              const result = await hook.promise(ctx);
-              if (result && typeof result === "object" && (name === "resourceLoad" || name === "buildScene")) {
-                ctx = result as RenderingContext<TEngine, TScene, TCamera>;
-              }
-              if (name === "resourceParse" && result === false) {
-                throw new Error("Pipeline: resourceParse validation failed (bail returned false)");
-              }
-            } else {
-              // fallback for unexpected shapes: try callAsync/call
-              if (typeof hook.callAsync === "function") {
-                await new Promise<void>((resolve, reject) =>
-                  hook.callAsync(ctx, (err?: any) => (err ? reject(err) : resolve()))
-                );
-              } else if (typeof hook.call === "function") {
-                hook.call(ctx);
-              } else {
-                throw new Error(`Hook "${String(name)}" unsupported shape`);
-              }
+      // try {
+      // dispatch based on stage name -> use correct tapable API and keep types explicit
+      switch (name) {
+        case "initEngine":
+        case "resourceLoad":
+        case "resourceParse":
+        case "buildScene":
+        case "postProcess":
+          // these hooks expose a promise() method (AsyncSeries* variants)
+          if (typeof hook.promise === "function") {
+            const result = await hook.promise(ctx);
+            if (result && typeof result === "object" && (name === "resourceLoad" || name === "buildScene")) {
+              ctx = result as RenderingContext<TEngine, TScene, TCamera>;
             }
-            break;
-
-          case "renderLoop":
-            // renderLoop is AsyncParallelHook: support promise() or callAsync()
+            if (name === "resourceParse" && result === false) {
+              throw new Error("Pipeline: resourceParse validation failed (bail returned false)");
+            }
+          } else {
+            // fallback for unexpected shapes: try callAsync/call
             if (typeof hook.callAsync === "function") {
-              // callAsync is used elsewhere for per-frame non-await invocation;
-              // here we await the promise() for one-time execution if available.
-              if (typeof hook.promise === "function") {
-                await hook.promise(ctx);
-              } else {
-                await new Promise<void>((resolve, reject) =>
-                  hook.callAsync(ctx, (err?: any) => (err ? reject(err) : resolve()))
-                );
-              }
+              await new Promise<void>((resolve, reject) =>
+                hook.callAsync(ctx, (err?: any) => (err ? reject(err) : resolve()))
+              );
+            } else if (typeof hook.call === "function") {
+              hook.call(ctx);
+            } else {
+              throw new Error(`Hook "${String(name)}" unsupported shape`);
+            }
+          }
+          break;
+
+        case "renderLoop":
+          // renderLoop is AsyncParallelHook: support promise() or callAsync()
+          if (typeof hook.callAsync === "function") {
+            // callAsync is used elsewhere for per-frame non-await invocation;
+            // here we await the promise() for one-time execution if available.
+            if (typeof hook.promise === "function") {
+              await hook.promise(ctx);
+            } else {
+              await new Promise<void>((resolve, reject) =>
+                hook.callAsync(ctx, (err?: any) => (err ? reject(err) : resolve()))
+              );
+            }
+          } else if (typeof hook.promise === "function") {
+            await hook.promise(ctx);
+          } else {
+            throw new Error(`Hook "${String(name)}" unsupported shape`);
+          }
+          break;
+
+        case "dispose":
+          // dispose is SyncHook -> call synchronously
+          if (typeof hook.call === "function") {
+            hook.call(ctx);
+          } else {
+            // fallback to other shapes if necessary
+            if (typeof hook.callAsync === "function") {
+              await new Promise<void>((resolve, reject) =>
+                hook.callAsync(ctx, (err?: any) => (err ? reject(err) : resolve()))
+              );
             } else if (typeof hook.promise === "function") {
               await hook.promise(ctx);
             } else {
               throw new Error(`Hook "${String(name)}" unsupported shape`);
             }
-            break;
+          }
+          break;
 
-          case "dispose":
-            // dispose is SyncHook -> call synchronously
-            if (typeof hook.call === "function") {
-              hook.call(ctx);
-            } else {
-              // fallback to other shapes if necessary
-              if (typeof hook.callAsync === "function") {
-                await new Promise<void>((resolve, reject) =>
-                  hook.callAsync(ctx, (err?: any) => (err ? reject(err) : resolve()))
-                );
-              } else if (typeof hook.promise === "function") {
-                await hook.promise(ctx);
-              } else {
-                throw new Error(`Hook "${String(name)}" unsupported shape`);
-              }
-            }
-            break;
-
-          default:
-            throw new Error(`Unknown hook "${String(name)}"`);
-        }
-
-        // mark stage done on ctx.metadata for idempotence checks
-        try {
-          ctx.metadata = ctx.metadata || {};
-          ctx.metadata.stagesCompleted = ctx.metadata.stagesCompleted || {};
-          ctx.metadata.stagesCompleted[String(name)] = true;
-        } catch {}
-      } catch (stageErr) {
-        // record the failed stage for callers (so they can decide adapter disposal behavior)
-        try {
-          ctx.metadata = ctx.metadata || {};
-          ctx.metadata.failedStage = String(name);
-        } catch {}
-        throw stageErr;
+        default:
+          throw new Error(`Unknown hook "${String(name)}"`);
       }
+
+      // mark stage done on ctx.metadata for idempotence checks
+      // try {
+      //   ctx.metadata = ctx.metadata || { stagesCompleted: {}, stageLocks: {}, stageCleanups: {} };
+      //   ctx.metadata.stagesCompleted = ctx.metadata.stagesCompleted || {};
+      //   ctx.metadata.stagesCompleted[String(name)] = true;
+      // } catch {}
+      // } catch (stageErr) {
+      // record the failed stage for callers (so they can decide adapter disposal behavior)
+      // try {
+      //   ctx.metadata = ctx.metadata || { stagesCompleted: {}, stageLocks: {}, stageCleanups: {} };
+      //   ctx.metadata.failedStage = String(name);
+      // } catch {}
+      // throw stageErr;
+      // }
     }
 
     return ctx;
@@ -268,7 +304,7 @@ export class Pipeline<TEngine = any, TScene = any, TCamera = any, TOptions = any
       request,
       container,
       adapter: this.adapter,
-      metadata: {},
+      metadata: { stagesCompleted: {}, stageLocks: {}, stageCleanups: {} },
       abortController,
       abortSignal: abortController.signal,
       renderState: { running: false, frameCount: 0 },
@@ -404,7 +440,7 @@ export class Pipeline<TEngine = any, TScene = any, TCamera = any, TOptions = any
 
     // 4) clear stagesCompleted flags for the stages we're about to run
     try {
-      ctx.metadata = ctx.metadata || {};
+      ctx.metadata = ctx.metadata || { stagesCompleted: {}, stageLocks: {}, stageCleanups: {} };
       ctx.metadata.stagesCompleted = ctx.metadata.stagesCompleted || {};
       for (const s of remaining) {
         ctx.metadata.stagesCompleted[String(s)] = false;

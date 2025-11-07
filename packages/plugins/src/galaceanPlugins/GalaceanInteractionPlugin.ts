@@ -1,13 +1,5 @@
-import type { IPlugin, Pipeline, RenderingContext } from '@chameleon/core';
-import {
-    WebGLEngine,
-    Scene,
-    Entity,
-    Camera,
-    MeshRenderer,
-    BoundingBox,
-    Vector3
-} from "@galacean/engine";
+import type { IPlugin, Pipeline, RenderingContext } from "@chameleon/core";
+import { WebGLEngine, Scene, Entity, Camera, MeshRenderer, BoundingBox, Vector3 } from "@galacean/engine";
 import { OrbitControl } from "@galacean/engine-toolkit";
 
 /**
@@ -27,168 +19,169 @@ import { OrbitControl } from "@galacean/engine-toolkit";
  * - Intended to be registered with the pipeline (pipeline.use or plugin list) so it runs on buildScene.
  */
 export class DefGalaceanInteractionPlugin implements IPlugin {
-    public name = 'DefGalaceanInteractionPlugin';
+  public name = "DefGalaceanInteractionPlugin";
 
-    // Default multiplier used when computing camera distance so the model comfortably fits.
-    private _fitOffset = 1.2;
+  // Default multiplier used when computing camera distance so the model comfortably fits.
+  private _fitOffset = 1.2;
 
-    /**
-     * computeModelBoundingSphere
-     *
-     * Collect mesh renderer bounds from the provided entity subtree, merge them into one
-     * bounding box, then derive a center and radius. The radius is approximated as half
-     * the diagonal length of the bounding box extent.
-     *
-     * Returns a conservative fallback (center from entity world position or origin,
-     * radius = 1.0) when no renderer bounds are available or when calculations fail.
-     */
-    private computeModelBoundingSphere(modelEntity: Entity): { center: Vector3; radius: number } {
-        const meshRenderers: MeshRenderer[] = [];
-        modelEntity.getComponentsIncludeChildren(MeshRenderer, meshRenderers);
+  /**
+   * computeModelBoundingSphere
+   *
+   * Collect mesh renderer bounds from the provided entity subtree, merge them into one
+   * bounding box, then derive a center and radius. The radius is approximated as half
+   * the diagonal length of the bounding box extent.
+   *
+   * Returns a conservative fallback (center from entity world position or origin,
+   * radius = 1.0) when no renderer bounds are available or when calculations fail.
+   */
+  private computeModelBoundingSphere(modelEntity: Entity): { center: Vector3; radius: number } {
+    const meshRenderers: MeshRenderer[] = [];
+    modelEntity.getComponentsIncludeChildren(MeshRenderer, meshRenderers);
 
-        // Accumulator bbox initialized to inverted extremes
-        const bbox = new BoundingBox();
-        bbox.min.set(Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY);
-        bbox.max.set(Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY);
+    // Accumulator bbox initialized to inverted extremes
+    const bbox = new BoundingBox();
+    bbox.min.set(Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY);
+    bbox.max.set(Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY);
 
-        // If no renderers found, try to use the entity world position as center
-        if (meshRenderers.length === 0) {
-            const fallbackCenter = new Vector3();
-            try {
-                const p = modelEntity.transform.worldPosition;
-                fallbackCenter.copyFrom(p);
-            } catch {
-                // leave fallbackCenter as zero-vector on error
-            }
-            return { center: fallbackCenter, radius: 1.0 };
-        }
-
-        // Merge all renderer bounds into the accumulator; skip any problematic entries
-        for (const r of meshRenderers) {
-            try {
-                BoundingBox.merge(r.bounds, bbox, bbox);
-            } catch {
-                // ignore single-renderer failures to remain robust
-            }
-        }
-
-        // Compute center and extent; if this fails, return safe fallback
-        const center = new Vector3();
-        const extent = new Vector3();
-        try {
-            bbox.getCenter(center);
-            bbox.getExtent(extent);
-        } catch {
-            return { center, radius: 1.0 };
-        }
-
-        // Radius is half the diagonal of extent; guard against degenerate values
-        const radius = Math.max(0.0001, extent.length() * 0.5);
-        return { center, radius };
+    // If no renderers found, try to use the entity world position as center
+    if (meshRenderers.length === 0) {
+      const fallbackCenter = new Vector3();
+      try {
+        const p = modelEntity.transform.worldPosition;
+        fallbackCenter.copyFrom(p);
+      } catch {
+        // leave fallbackCenter as zero-vector on error
+      }
+      return { center: fallbackCenter, radius: 1.0 };
     }
 
-    /**
-     * getCameraEntity
-     *
-     * Resolve the camera entity from the rendering context:
-     *  - preferred: ctx.engineHandles.camera (pipeline/adapter provided)
-     *  - fallback: adapter/plugin-stored camera on this instance (backwards compatibility)
-     *
-     * Throws a clear Error if no camera entity is available.
-     */
-    private getCameraEntity(ctx: RenderingContext<WebGLEngine, Scene, Entity>): Entity {
-        const engineHandles = ctx.engineHandles ?? {};
-        const cameraEntity = engineHandles.camera ?? (this as any).camera as Entity | undefined;
-        if (!cameraEntity) {
-            throw new Error("DefGalaceanInteractionPlugin: camera entity not available in context.engineHandles");
-        }
-        return cameraEntity;
+    // Merge all renderer bounds into the accumulator; skip any problematic entries
+    for (const r of meshRenderers) {
+      try {
+        BoundingBox.merge(r.bounds, bbox, bbox);
+      } catch {
+        // ignore single-renderer failures to remain robust
+      }
     }
 
-    /**
-     * getParsedEntity
-     *
-     * Extract the parsed model root entity from ctx.parsedGLTF.targetEngineEntity.
-     * Throws if the parsed entity is missing to preserve existing pipeline expectations.
-     */
-    private getParsedEntity(ctx: RenderingContext<WebGLEngine, Scene, Entity>): Entity {
-        const parsed = ctx.parsedGLTF?.targetEngineEntity as Entity | undefined;
-        if (!parsed) {
-            throw new Error("DefGalaceanInteractionPlugin: parsed model entity not found on ctx.parsedGLTF");
-        }
-        return parsed;
+    // Compute center and extent; if this fails, return safe fallback
+    const center = new Vector3();
+    const extent = new Vector3();
+    try {
+      bbox.getCenter(center);
+      bbox.getExtent(extent);
+    } catch {
+      return { center, radius: 1.0 };
     }
 
-    /**
-     * getOrCreateOrbitControl
-     *
-     * Reuse an existing OrbitControl component on the camera entity if present,
-     * otherwise add a new OrbitControl. Centralizes control retrieval for easy replacement.
-     */
-    private getOrCreateOrbitControl(cameraEntity: Entity): OrbitControl {
-        if (cameraEntity.getComponent && cameraEntity.getComponent(OrbitControl)) {
-            return cameraEntity.getComponent(OrbitControl) as OrbitControl;
-        }
-        return cameraEntity.addComponent(OrbitControl);
+    // Radius is half the diagonal of extent; guard against degenerate values
+    const radius = Math.max(0.0001, extent.length() * 0.5);
+    return { center, radius };
+  }
+
+  /**
+   * getCameraEntity
+   *
+   * Resolve the camera entity from the rendering context:
+   *  - preferred: ctx.engineHandles.camera (pipeline/adapter provided)
+   *  - fallback: adapter/plugin-stored camera on this instance (backwards compatibility)
+   *
+   * Throws a clear Error if no camera entity is available.
+   */
+  private getCameraEntity(ctx: RenderingContext<WebGLEngine, Scene, Entity>): Entity {
+    const engineHandles = ctx.engineHandles ?? {};
+    const cameraEntity = engineHandles.camera ?? ((this as any).camera as Entity | undefined);
+    if (!cameraEntity) {
+      throw new Error("DefGalaceanInteractionPlugin: camera entity not available in context.engineHandles");
+    }
+    return cameraEntity;
+  }
+
+  /**
+   * getParsedEntity
+   *
+   * Extract the parsed model root entity from ctx.parsedGLTF.targetEngineEntity.
+   * Throws if the parsed entity is missing to preserve existing pipeline expectations.
+   */
+  private getParsedEntity(ctx: RenderingContext<WebGLEngine, Scene, Entity>): Entity {
+    const parsed = ctx.parsedGLTF?.targetEngineEntity as Entity | undefined;
+    if (!parsed) {
+      throw new Error("DefGalaceanInteractionPlugin: parsed model entity not found on ctx.parsedGLTF");
+    }
+    return parsed;
+  }
+
+  /**
+   * getOrCreateOrbitControl
+   *
+   * Reuse an existing OrbitControl component on the camera entity if present,
+   * otherwise add a new OrbitControl. Centralizes control retrieval for easy replacement.
+   */
+  private getOrCreateOrbitControl(cameraEntity: Entity): OrbitControl {
+    if (cameraEntity.getComponent && cameraEntity.getComponent(OrbitControl)) {
+      return cameraEntity.getComponent(OrbitControl) as OrbitControl;
+    }
+    return cameraEntity.addComponent(OrbitControl);
+  }
+
+  /**
+   * configureCameraForModel
+   *
+   * Main routine:
+   * 1) resolve camera and parsed entity,
+   * 2) compute bounding sphere (center + radius),
+   * 3) configure orbit target and distance bounds,
+   * 4) position the camera at a conservative distance along +Z.
+   *
+   * Notes:
+   * - Uses ctx.request.userData.fitOffset when present; otherwise uses plugin default.
+   * - Guards against extremely small FOVs to avoid extreme distances.
+   * - Positions the camera conservatively; more advanced framing can be added elsewhere.
+   */
+  private configureCameraForModel(ctx: RenderingContext<WebGLEngine, Scene, Entity>) {
+    // Resolve required handles
+    const cameraEntity = this.getCameraEntity(ctx);
+    const parsedEntity = this.getParsedEntity(ctx);
+
+    // Compute center + radius for framing
+    const { center, radius } = this.computeModelBoundingSphere(parsedEntity);
+    // Ensure camera component exists
+    const camera = cameraEntity.getComponent(Camera);
+    if (!camera) {
+      throw new Error("DefGalaceanInteractionPlugin: Camera component not found on camera entity");
     }
 
-    /**
-     * configureCameraForModel
-     *
-     * Main routine:
-     * 1) resolve camera and parsed entity,
-     * 2) compute bounding sphere (center + radius),
-     * 3) configure orbit target and distance bounds,
-     * 4) position the camera at a conservative distance along +Z.
-     *
-     * Notes:
-     * - Uses ctx.request.userData.fitOffset when present; otherwise uses plugin default.
-     * - Guards against extremely small FOVs to avoid extreme distances.
-     * - Positions the camera conservatively; more advanced framing can be added elsewhere.
-     */
-    private configureCameraForModel(ctx: RenderingContext<WebGLEngine, Scene, Entity>) {
-        // Resolve required handles
-        const cameraEntity = this.getCameraEntity(ctx);
-        const parsedEntity = this.getParsedEntity(ctx);
+    // Ensure an OrbitControl exists
+    const orbitControl = this.getOrCreateOrbitControl(cameraEntity);
 
-        // Compute center + radius for framing
-        const { center, radius } = this.computeModelBoundingSphere(parsedEntity);
-        // Ensure camera component exists
-        const camera = cameraEntity.getComponent(Camera);
-        if (!camera) {
-            throw new Error("DefGalaceanInteractionPlugin: Camera component not found on camera entity");
-        }
+    // Determine fit offset (allow request override via ctx.request.userData.fitOffset)
+    const fitOffset = ctx.request?.userData?.fitOffset ?? this._fitOffset;
 
-        // Ensure an OrbitControl exists
-        const orbitControl = this.getOrCreateOrbitControl(cameraEntity);
+    // Compute distance to fit model in vertical FOV and apply margin
+    const fovRad = (camera.fieldOfView * Math.PI) / 180;
+    const clampedFov = Math.max(0.01, fovRad); // avoid division by very small values
+    const distance = (radius / Math.sin(clampedFov / 2)) * fitOffset;
 
-        // Determine fit offset (allow request override via ctx.request.userData.fitOffset)
-        const fitOffset = ctx.request?.userData?.fitOffset ?? this._fitOffset;
+    // Configure orbit control target and safe min/max distances
+    orbitControl.target.set(center.x, center.y, center.z);
+    // orbitControl.minDistance = Math.max(0.1, radius * 0.5);
+    orbitControl.minDistance = Math.max(0.1, distance - radius);
+    orbitControl.maxDistance = Math.max(orbitControl.minDistance + 0.1, distance * 4);
 
-        // Compute distance to fit model in vertical FOV and apply margin
-        const fovRad = (camera.fieldOfView * Math.PI) / 180;
-        const clampedFov = Math.max(0.01, fovRad); // avoid division by very small values
-        const distance = (radius / Math.sin(clampedFov / 2)) * fitOffset;
+    // Position camera along +Z at a conservative scaled distance
+    cameraEntity.transform.setPosition(center.x, center.y, center.z + distance * 3 + camera.nearClipPlane);
+  }
 
-        // Configure orbit control target and safe min/max distances
-        orbitControl.target.set(center.x, center.y, center.z);
-        orbitControl.minDistance = Math.max(0.1, radius * 0.5);
-        orbitControl.maxDistance = Math.max(orbitControl.minDistance + 0.1, distance * 4);
-
-        // Position camera along +Z at a conservative scaled distance
-        cameraEntity.transform.setPosition(center.x, center.y, center.z + distance * 3 + camera.nearClipPlane);
-    }
-
-    /**
-     * apply
-     *
-     * Plugin entrypoint: attach to pipeline.buildScene so camera framing runs after the scene is built.
-     * Exceptions from configureCameraForModel are allowed to bubble up to the pipeline so they can be logged.
-     */
-    apply(pipeline: Pipeline) {
-        pipeline.hooks.buildScene.tapPromise(this.name, async (ctx: RenderingContext<WebGLEngine, Scene, Entity>) => {
-            this.configureCameraForModel(ctx);
-            return ctx;
-        });
-    }
+  /**
+   * apply
+   *
+   * Plugin entrypoint: attach to pipeline.buildScene so camera framing runs after the scene is built.
+   * Exceptions from configureCameraForModel are allowed to bubble up to the pipeline so they can be logged.
+   */
+  apply(pipeline: Pipeline) {
+    pipeline.hooks.buildScene.tapPromise(this.name, async (ctx: RenderingContext<WebGLEngine, Scene, Entity>) => {
+      this.configureCameraForModel(ctx);
+      return ctx;
+    });
+  }
 }

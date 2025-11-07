@@ -1,5 +1,5 @@
 import { IPlugin, Pipeline, RenderingContext } from "@chameleon/core";
-import { isElementOfType } from "./utils";
+import { ensureMetadata, isElementOfType } from "./utils";
 import { isStageLocked, lockStage, unlockStage, addStageCleanup, runStageCleanups, markStageCompleted } from "./utils";
 /**
  * PipelineAdapterPlugin
@@ -21,7 +21,7 @@ export class PipelineAdapterPlugin implements IPlugin {
     // 1) Ensure engine is initialized before doing resource work.
     pipeline.hooks.initEngine.tapPromise(this.name, async (ctx: RenderingContext) => {
       if (ctx.abortSignal?.aborted) throw new Error("initEngine aborted");
-      if (isStageLocked(ctx, "initEngine")) return ctx;
+      if (isStageLocked(ctx, "initEngine")) return ;
       lockStage(ctx, "initEngine");
       try {
         // allow HTMLElement (adapter may support canvas or other mount points)
@@ -50,6 +50,8 @@ export class PipelineAdapterPlugin implements IPlugin {
 
         markStageCompleted(ctx, "initEngine", true);
       } catch (err) {
+        const meta = ensureMetadata(ctx);
+        meta.failedStage = "initEngine";
         try {
           pipeline.logger?.error?.("PipelineAdapterPlugin:initEngine error", err);
         } catch {}
@@ -57,6 +59,7 @@ export class PipelineAdapterPlugin implements IPlugin {
       } finally {
         unlockStage(ctx, "initEngine");
       }
+      return ;
     });
 
     // 2) Load resources (support string(s) and in-memory sources)
@@ -71,13 +74,13 @@ export class PipelineAdapterPlugin implements IPlugin {
 
       // fast path: nothing to load
       if (sources.length === 0) {
-        ctx.rawAssets = [];
+        ctx.rawAssets = undefined;
         // register trivial cleanup to clear rawAssets
         addStageCleanup(ctx, "resourceLoad", async (c: RenderingContext) => {
           try {
             c?.parsedGLTF?.targetEngineEntity?.destroy?.();
             c.parsedGLTF = undefined;
-            c.rawAssets = [];
+            c.rawAssets = undefined;
           } catch {}
         });
         markStageCompleted(ctx, "resourceLoad", true);
@@ -141,10 +144,10 @@ export class PipelineAdapterPlugin implements IPlugin {
     pipeline.hooks.resourceParse.tapPromise(this.name, async (ctx: RenderingContext) => {
       if (ctx.abortSignal?.aborted) throw new Error("resourceParse aborted");
 
-      if (isStageLocked(ctx, "resourceParse")) return undefined;
+      if (isStageLocked(ctx, "resourceParse")) return ctx;
       lockStage(ctx, "resourceParse");
 
-      const raw = ctx.rawAssets ?? [];
+      const raw = ctx.rawAssets ?? undefined;
 
       try {
         if (typeof ctx.adapter.parseResource === "function") {
@@ -190,7 +193,7 @@ export class PipelineAdapterPlugin implements IPlugin {
 
       // resourceParse previously returned undefined to indicate bail semantics for some pipelines;
       // keep same behavior to avoid changing pipeline consumers.
-      return undefined;
+      return ctx;
     });
 
     // 4) Build scene using adapter.buildScene if provided. Otherwise no-op.
@@ -246,6 +249,7 @@ export class PipelineAdapterPlugin implements IPlugin {
     pipeline.hooks.postProcess.tapPromise(this.name, async (ctx: RenderingContext) => {
       // Post-process shouldn't clear permanent resources; keep hook present for extensions.
       // no-op by default
+      return ;
     });
 
     // Dispose: run all stage cleanups in a safe order if pipeline triggers dispose.

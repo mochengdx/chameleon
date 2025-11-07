@@ -46,12 +46,19 @@ export interface RenderingContext<
    *   - stageLocks: record of running stage -> boolean (concurrent guard)
    *   - stageCleanups: optional per-stage array of cleanup callbacks to run before re-running a stage
    */
-  metadata?: {
-    stagesCompleted?: Record<string, boolean>;
-    stageLocks?: Record<string, boolean>;
-    // stageCleanups[stageName] = array of async/sync cleanup functions invoked before re-running that stage
-    stageCleanups?: Record<string, Array<(ctx: RenderingContext<TEngine, TScene, TCamera>) => void | Promise<void>>>;
-    [key: string]: any;
-  };
+  // pipeline metadata: prefer `PipelineMetadata` for stronger typing
+  metadata?: PipelineMetadata;
+  [key: string]: any;
+}
+
+/**
+ * PipelineMetadata
+ * Centralized and reusable metadata shape used by the pipeline and plugins.
+ */
+export interface PipelineMetadata {
+  stagesCompleted: Record<string, boolean>;
+  stageLocks: Record<string, boolean>;
+  stageCleanups: Record<string, Array<(ctx: RenderingContext<any, any, any, any, any, any>) => void | Promise<void>>>;
+  failedStage?: string;
   [key: string]: any;
 }
