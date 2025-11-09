@@ -14,8 +14,8 @@
 
   // Automatically apply ESLint fixes and format on save
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true,
-    "source.organizeImports": true
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
   },
   "editor.formatOnSave": true,
   // Prefer Prettier as the default formatter when available
