@@ -1,4 +1,3 @@
+export * from "./galaceanPlugins";
 export * from "./PipelineAdapterPlugin";
-export * from "./galaceanPlugins/GalaceanCameraControlPlugin";
-export * from "./galaceanPlugins/GalaceanInteractionPlugin";
-export * from "./galaceanPlugins/galaceanUtils";
+export * from "./utils";

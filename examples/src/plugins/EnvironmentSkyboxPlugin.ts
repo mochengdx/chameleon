@@ -37,11 +37,12 @@ export class EnvironmentSkyboxPlugin implements IPlugin {
     });
   }
   unapply(pipeline: Pipeline): void {
-    const { scene, engine } = ctx.engineHandles ?? {};
-    if (!scene || !engine) {
-      return ctx;
-    }
-    typeScene.background = this.origin;
+    // const {} = pipeline;
+    // const { scene, engine } = ctx.engineHandles ?? {};
+    // if (!scene || !engine) {
+    //   return ctx;
+    // }
+    // typeScene.background = this.origin;
     pipeline.uninstall(this.name);
   }
 }

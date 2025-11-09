@@ -88,7 +88,7 @@ export interface EngineAdapter<
   parseResource(
     raw: TResource,
     ctx: RenderingContext<TEngine, TScene, TCamera, TOptions, TResource, TEntity>
-  ): Promise<TEntity>;
+  ): Promise<{ entity: TEntity; gltf: TResource }>;
 
   /**
    * buildScene

@@ -1,15 +1,15 @@
 import {
+  AnyHook,
+  AsyncParallelHook,
+  AsyncSeriesBailHook,
   AsyncSeriesHook,
   AsyncSeriesWaterfallHook,
-  AsyncSeriesBailHook,
-  AsyncParallelHook,
-  SyncHook,
-  AnyHook
+  SyncHook
 } from "tapable";
-import type { RenderingContext, RenderRequest } from "./RenderingContext";
-import { Logger } from "./Logger";
 import { EngineAdapter } from "./EngineAdapter";
+import { Logger } from "./Logger";
 import { IPlugin } from "./Plugin";
+import type { RenderingContext, RenderRequest } from "./RenderingContext";
 
 /**
  *StageHooks - typed collection of pipeline hooks.
@@ -200,7 +200,7 @@ export class Pipeline<TEngine = any, TScene = any, TCamera = any, TOptions = any
     for (const name of names) {
       ensureNotAborted();
       const hook = this.hooks[name] as any; // will cast to concrete types below
-      console.log("run stage:", name);
+      // console.log("run stage:", name);
       if (!hook) throw new Error(`Unknown hook "${String(name)}"`);
 
       // try {

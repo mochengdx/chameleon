@@ -1,6 +1,14 @@
 import { IPlugin, Pipeline, RenderingContext } from "@chameleon/core";
-import { ensureMetadata, isElementOfType } from "./utils";
-import { isStageLocked, lockStage, unlockStage, addStageCleanup, runStageCleanups, markStageCompleted } from "./utils";
+import {
+  addStageCleanup,
+  ensureMetadata,
+  isElementOfType,
+  isStageLocked,
+  lockStage,
+  markStageCompleted,
+  runStageCleanups,
+  unlockStage
+} from "./utils";
 /**
  * PipelineAdapterPlugin
  * - Robust loader that:
@@ -21,7 +29,7 @@ export class PipelineAdapterPlugin implements IPlugin {
     // 1) Ensure engine is initialized before doing resource work.
     pipeline.hooks.initEngine.tapPromise(this.name, async (ctx: RenderingContext) => {
       if (ctx.abortSignal?.aborted) throw new Error("initEngine aborted");
-      if (isStageLocked(ctx, "initEngine")) return ;
+      if (isStageLocked(ctx, "initEngine")) return ctx;
       lockStage(ctx, "initEngine");
       try {
         // allow HTMLElement (adapter may support canvas or other mount points)
@@ -59,7 +67,7 @@ export class PipelineAdapterPlugin implements IPlugin {
       } finally {
         unlockStage(ctx, "initEngine");
       }
-      return ;
+      return;
     });
 
     // 2) Load resources (support string(s) and in-memory sources)
@@ -151,9 +159,10 @@ export class PipelineAdapterPlugin implements IPlugin {
 
       try {
         if (typeof ctx.adapter.parseResource === "function") {
-          const result = await ctx.adapter.parseResource(raw, ctx);
+          const { entity, gltf } = await ctx.adapter.parseResource(raw, ctx);
+          const { animations, meshes } = gltf;
           // adapter may return a parsed representation or an engine-specific entity
-          ctx.parsedGLTF = { targetEngineEntity: result };
+          ctx.parsedGLTF = { targetEngineEntity: entity, animations, meshes, gltf };
         } else {
           const parsed = await Promise.all(
             raw.map(async (r: any) => {
@@ -249,7 +258,7 @@ export class PipelineAdapterPlugin implements IPlugin {
     pipeline.hooks.postProcess.tapPromise(this.name, async (ctx: RenderingContext) => {
       // Post-process shouldn't clear permanent resources; keep hook present for extensions.
       // no-op by default
-      return ;
+      return;
     });
 
     // Dispose: run all stage cleanups in a safe order if pipeline triggers dispose.

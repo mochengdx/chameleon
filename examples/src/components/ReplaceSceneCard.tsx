@@ -1,11 +1,11 @@
 import { GalaceanAdapter } from "@chameleon/adapters";
+import type { IPlugin, RenderingContext } from "@chameleon/core";
 import { attachLoggerToPipeline, Pipeline, type RenderRequest } from "@chameleon/core";
 import { DefCameraControlPlugin, DefGalaceanInteractionPlugin, PipelineAdapterPlugin } from "@chameleon/plugins";
-import React, { useRef, useEffect, useCallback } from "react";
-import SceneCard from "./SceneCard";
-import type { RenderingContext } from "@chameleon/core";
+import React, { useCallback, useEffect, useRef } from "react";
 import { EnvironmentSkyboxPlugin } from "../plugins/EnvironmentSkyboxPlugin";
 import { LoadingPlugin } from "../plugins/LoadingPlugin";
+import SceneCard from "./SceneCard";
 
 import { ActionButton } from "./ActionButton";
 
@@ -135,7 +135,7 @@ export default function ReplaceSceneCard({}) {
     const { pipeline, ctx } = pipieRef.current;
 
     // attach plugins
-    const plugins: [] = [
+    const plugins: IPlugin[] = [
       // new PipelineAdapterPlugin(),
       // new DefCameraControlPlugin(),
       // new DefGalaceanInteractionPlugin(),
@@ -166,7 +166,6 @@ export default function ReplaceSceneCard({}) {
     pipeline.use(new EnvironmentSkyboxPlugin());
   }, []);
 
-
   const handleUninstall = useCallback(async () => {
     if (!pipieRef?.current?.pipeline) {
       return;
@@ -183,7 +182,7 @@ export default function ReplaceSceneCard({}) {
         <>
           <ActionButton onClick={handleReplace}>Dynamic model replacement </ActionButton>
           <ActionButton onClick={handleSkyBox}>Use Skybox </ActionButton>
-           <ActionButton onClick={handleUninstall}>Uninstall </ActionButton>
+          <ActionButton onClick={handleUninstall}>Uninstall </ActionButton>
         </>
       }
       title="Dynamic Model Replacement via Chameleon Plugin System"
