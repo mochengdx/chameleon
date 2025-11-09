@@ -4,6 +4,7 @@ import { attachLoggerToPipeline, Pipeline, type RenderRequest } from "@chameleon
 import {
   DefCameraControlPlugin,
   DefGalaceanInteractionPlugin,
+  GalaceanModelClickPlugin,
   GalceanAnimationPlugin,
   PipelineAdapterPlugin
 } from "@chameleon/plugins";
@@ -38,7 +39,8 @@ export default function AniSceneCard({}) {
         idle: "ani_bipedIdleV01_idle001",
         enter: "ani_bipedPreV01_entrance001",
         click: "ani_bipedPreV01_dance001"
-      })
+      }),
+      new GalaceanModelClickPlugin()
     ];
     plugins.forEach((p) => pipeline.use(p));
 

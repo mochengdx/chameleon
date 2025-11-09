@@ -7,6 +7,7 @@ import {
   SyncHook
 } from "tapable";
 import { EngineAdapter } from "./EngineAdapter";
+import { EventBus } from "./EventBus";
 import { Logger } from "./Logger";
 import { IPlugin } from "./Plugin";
 import type { RenderingContext, RenderRequest } from "./RenderingContext";
@@ -309,7 +310,8 @@ export class Pipeline<TEngine = any, TScene = any, TCamera = any, TOptions = any
       abortSignal: abortController.signal,
       renderState: { running: false, frameCount: 0 },
       pipeline: this,
-      engineHandles: { engine: null as any, scene: null as any, camera: null as any }
+      engineHandles: { engine: null as any, scene: null as any, camera: null as any },
+      eventBus: new EventBus()
     };
 
     const order: (keyof StageHooks)[] = [

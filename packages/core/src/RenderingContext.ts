@@ -1,4 +1,5 @@
 import type { EngineAdapter } from "./EngineAdapter";
+import { EventBus } from "./EventBus";
 import type { Pipeline } from "./Pipeline";
 
 export type RenderRequest = {
@@ -48,6 +49,7 @@ export interface RenderingContext<
    */
   // pipeline metadata: prefer `PipelineMetadata` for stronger typing
   metadata?: PipelineMetadata;
+  eventBus?: EventBus;
   [key: string]: any;
 }
 

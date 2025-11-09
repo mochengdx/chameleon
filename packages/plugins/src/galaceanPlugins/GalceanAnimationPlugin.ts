@@ -35,7 +35,7 @@ export class GalceanAnimationPlugin implements IPlugin {
   constructor(public animationMap: PartialAnimationMap) {}
 
   // track removal functions for registered listeners keyed by request id
-  private _removers = new Map<string, () => void>();
+  private removers = new Map<string, () => void>();
 
   // Find the first Animator on the root or its descendants.
   private findAnimator(root: Entity): Animator | undefined {
@@ -115,22 +115,25 @@ export class GalceanAnimationPlugin implements IPlugin {
     animator: Animator,
     clickState: AnimatorState
   ): () => void {
-    const container = ctx.container as HTMLElement | null;
-    if (!container) {
-      pipeline.logger?.info?.("GalceanAnimationPlugin: no container to attach click handler");
-      return () => {};
+    const bus = ctx?.eventBus;
+    if (!bus) {
+      pipeline.logger?.info?.("GalceanAnimationPlugin: no eventBus available on ctx; skipping click handler");
     }
-
     const handler = () => {
       try {
-        animator.play(clickState.name);
+        // Prefer to broadcast the click event so other plugins can react.
+        try {
+          animator.play(clickState.name);
+        } catch (err) {
+          pipeline.logger?.warn?.("GalceanAnimationPlugin: click handler play error", err);
+        }
       } catch (err) {
         pipeline.logger?.warn?.("GalceanAnimationPlugin: click handler error", err);
       }
     };
-
-    container.addEventListener("click", handler);
-    const remove = () => container.removeEventListener("click", handler);
+    bus.off("model:clicked", handler);
+    bus.on("model:clicked", handler);
+    const remove = () => bus?.off("model:clicked", handler);
     return remove;
   }
 
@@ -161,19 +164,21 @@ export class GalceanAnimationPlugin implements IPlugin {
       // register click handler that triggers click animation; keep remover for cleanup
       if (resolved.click) {
         const remover = this.registerClickHandler(ctx, pipeline, animator, resolved.click);
+        // todo: not sure if Date.now() is good enough here
         const key = ctx.request?.id ?? String(Date.now());
-        this._removers.set(key, remover);
+        this.removers.set(key, remover);
       }
-      addStageCleanup(ctx, "buildScene", async (cleanupCtx: SpecCtx) => {
+      addStageCleanup(ctx, "postProcess", async (cleanupCtx: SpecCtx) => {
+        // todo: not sure if Date.now() is good enough here
         const key = cleanupCtx.request?.id ?? String(Date.now());
-        const remove = this._removers.get(key);
+        const remove = this.removers.get(key);
         if (remove) {
           try {
             remove();
           } catch {
             /* ignore cleanup errors */
           }
-          this._removers.delete(key);
+          this.removers.delete(key);
         }
       });
     });
@@ -181,14 +186,14 @@ export class GalceanAnimationPlugin implements IPlugin {
 
   unapply(pipeline: Pipeline): void {
     // run any leftover removers and clear map
-    for (const [, remove] of this._removers) {
+    for (const [, remove] of this.removers) {
       try {
         remove();
       } catch {
         /* ignore cleanup errors */
       }
     }
-    this._removers.clear();
+    this.removers.clear();
     pipeline.uninstall(this.name);
   }
 }

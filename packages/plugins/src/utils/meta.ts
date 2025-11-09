@@ -81,12 +81,14 @@ export function addStageCleanup(ctx: RC, stage: StageName, fn: StageCleanupFn) {
  */
 export async function runStageCleanups(ctx: RC, stage: StageName) {
   const md = ensureMetadata(ctx);
-  const list: StageCleanupFn[] = (md.stageCleanups?.[stage]) || [];
+  const list: StageCleanupFn[] = md.stageCleanups?.[stage] || [];
   for (const fn of list) {
     try {
       await fn(ctx);
     } catch (e) {
-      try { console.error(`[metadata] cleanup failed for stage ${stage}`, e); } catch {}
+      try {
+        console.error(`[metadata] cleanup failed for stage ${stage}`, e);
+      } catch {}
     }
   }
 }
