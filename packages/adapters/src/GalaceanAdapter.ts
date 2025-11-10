@@ -1,12 +1,12 @@
 import { EngineAdapter, RenderingContext } from "@chameleon/core";
 import {
-  Scene,
-  Camera,
-  WebGLEngine as GLEngine,
-  WebGLGraphicDeviceOptions,
   AssetType,
+  Camera,
+  Entity,
+  WebGLEngine as GLEngine,
   GLTFResource,
-  Entity
+  Scene,
+  WebGLGraphicDeviceOptions
 } from "@galacean/engine";
 import { SUPPORTED_ADAPTERS } from "./constants";
 
@@ -145,16 +145,16 @@ export class GalaceanAdapter
    * - Also store the parsed entity on ctx.parsedGLTF for downstream plugins
    *   that expect the conventional { targetEngineEntity } shape.
    */
-  async parseResource(assets: GLTFResource, ctx: SpecRenderingContext): Promise<Entity> {
-    if (!assets) {
+  async parseResource(raw: GLTFResource, ctx: SpecRenderingContext): Promise<{ entity: Entity; gltf: GLTFResource }> {
+    if (!raw) {
       throw new Error("GalaceanAdapter.parseResource: no assets provided");
     }
 
     // instantiate the scene root from the GLTF resource
     let gltfSceneRoot: Entity;
     try {
-      if (typeof assets?.instantiateSceneRoot === "function") {
-        gltfSceneRoot = assets?.instantiateSceneRoot();
+      if (typeof raw?.instantiateSceneRoot === "function") {
+        gltfSceneRoot = raw?.instantiateSceneRoot();
       } else {
         throw new Error("GLTFResource missing instantiateSceneRoot");
       }
@@ -165,13 +165,13 @@ export class GalaceanAdapter
     }
 
     // keep backwards-compatible parsedGLTF shape on context for other plugins
-    try {
-      ctx.parsedGLTF = { targetEngineEntity: gltfSceneRoot };
-    } catch {
-      // non-fatal: ctx may be frozen in some tests; parsed entity is still returned
-    }
+    // try {
+    //   ctx.parsedGLTF = { targetEngineEntity: gltfSceneRoot };
+    // } catch {
+    //   // non-fatal: ctx may be frozen in some tests; parsed entity is still returned
+    // }
 
-    return gltfSceneRoot;
+    return { entity: gltfSceneRoot, gltf: raw };
   }
 
   /**

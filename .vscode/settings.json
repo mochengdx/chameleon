@@ -10,20 +10,19 @@
   "eslint.workingDirectories": [{ "mode": "auto" }],
 
   // Validate these file types with ESLint
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact"
-  ],
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
 
-  // Automatically apply ESLint fixes on save (recommended)
+  // Automatically apply ESLint fixes and format on save
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
   },
+  "editor.formatOnSave": true,
+  // Prefer Prettier as the default formatter when available
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
 
   // Show ESLint status in status bar (helpful)
-  "eslint.alwaysShowStatus": true,
+  "eslint.alwaysShowStatus": true
 
   // Optional: If you rely on Prettier for formatting, disable formatOnSave or coordinate:
   // "editor.formatOnSave": false
