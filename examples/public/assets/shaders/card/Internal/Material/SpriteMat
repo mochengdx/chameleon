@@ -1,0 +1,56 @@
+{
+  "name": "SpriteMat",
+  "shaderRef": {
+    "refId": "0000509"
+  },
+  "shader": "Sprite",
+  "renderState": {
+    "blendState": {
+      "targetBlendState": {
+        "enabled": true,
+        "colorBlendOperation": 0,
+        "alphaBlendOperation": 0,
+        "sourceColorBlendFactor": 6,
+        "sourceAlphaBlendFactor": 1,
+        "destinationColorBlendFactor": 7,
+        "destinationAlphaBlendFactor": 7,
+        "colorWriteMask": 15
+      },
+      "blendColor": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 0
+      },
+      "alphaToCoverage": false
+    },
+    "depthState": {
+      "enabled": true,
+      "writeEnabled": false,
+      "compareFunction": 1
+    },
+    "stencilState": {
+      "enabled": false,
+      "referenceValue": 0,
+      "mask": 255,
+      "writeMask": 255,
+      "compareFunctionFront": 7,
+      "compareFunctionBack": 7,
+      "passOperationFront": 0,
+      "passOperationBack": 0,
+      "failOperationFront": 0,
+      "failOperationBack": 0,
+      "zFailOperationFront": 0,
+      "zFailOperationBack": 0
+    },
+    "rasterState": {
+      "cullMode": 0,
+      "depthBias": 0,
+      "slopeScaledDepthBias": 0,
+      "_cullFaceEnable": true,
+      "_frontFaceInvert": false
+    },
+    "renderQueueType": 2
+  },
+  "macros": []
+}

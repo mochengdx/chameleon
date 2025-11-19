@@ -1,0 +1,205 @@
+{
+  "name": "DefaultMat",
+  "shaderRef": {
+    "refId": "0000501"
+  },
+  "shader": "pbr",
+  "shaderData": {
+    "material_IOR": {
+      "type": "Float",
+      "value": 1.5
+    },
+    "material_TilingOffset": {
+      "type": "Vector4",
+      "value": {
+        "x": 1,
+        "y": 1,
+        "z": 0,
+        "w": 0
+      }
+    },
+    "material_BaseColor": {
+      "type": "Color",
+      "value": {
+        "r": 1,
+        "g": 1,
+        "b": 1,
+        "a": 1
+      }
+    },
+    "material_NormalIntensity": {
+      "type": "Float",
+      "value": 1
+    },
+    "material_EmissiveColor": {
+      "type": "Color",
+      "value": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 1
+      }
+    },
+    "material_SpecularColor": {
+      "type": "Color",
+      "value": {
+        "r": 1,
+        "g": 1,
+        "b": 1,
+        "a": 1
+      }
+    },
+    "material_Shininess": {
+      "type": "Float",
+      "value": 16
+    },
+    "material_OcclusionIntensity": {
+      "type": "Float",
+      "value": 1
+    },
+    "material_OcclusionTextureCoord": {
+      "type": "Float",
+      "value": 0
+    },
+    "material_ClearCoat": {
+      "type": "Float",
+      "value": 0
+    },
+    "material_ClearCoatRoughness": {
+      "type": "Float",
+      "value": 0
+    },
+    "material_Metal": {
+      "type": "Float",
+      "value": 1
+    },
+    "material_Roughness": {
+      "type": "Float",
+      "value": 1
+    },
+    "material_PBRSpecularColor": {
+      "type": "Color",
+      "value": {
+        "r": 1,
+        "g": 1,
+        "b": 1,
+        "a": 1
+      }
+    },
+    "material_Glossiness": {
+      "type": "Float",
+      "value": 1
+    },
+    "u_lightMapIntensity": {
+      "type": "Float",
+      "value": 1
+    },
+    "material_TintColor": {
+      "type": "Color",
+      "value": {
+        "r": 1,
+        "g": 1,
+        "b": 1,
+        "a": 1
+      }
+    },
+    "material_Exposure": {
+      "type": "Float",
+      "value": 1
+    },
+    "material_Rotation": {
+      "type": "Float",
+      "value": 0
+    },
+    "sunMode": {
+      "type": "Select",
+      "value": 2
+    },
+    "material_SunSize": {
+      "type": "Float",
+      "value": 0.04
+    },
+    "material_SunSizeConvergence": {
+      "type": "Float",
+      "value": 5
+    },
+    "material_AtmosphereThickness": {
+      "type": "Float",
+      "value": 1
+    },
+    "material_SkyTint": {
+      "type": "Color",
+      "value": {
+        "r": 0.5,
+        "g": 0.5,
+        "b": 0.5,
+        "a": 1
+      }
+    },
+    "material_GroundTint": {
+      "type": "Color",
+      "value": {
+        "r": 0.369,
+        "g": 0.349,
+        "b": 0.341,
+        "a": 1
+      }
+    }
+  },
+  "macros": [
+    {
+      "name": "MATERIAL_NEED_WORLD_POS"
+    },
+    {
+      "name": "MATERIAL_NEED_TILING_OFFSET"
+    }
+  ],
+  "renderState": {
+    "blendState": {
+      "targetBlendState": {
+        "enabled": false,
+        "colorBlendOperation": 0,
+        "alphaBlendOperation": 0,
+        "sourceColorBlendFactor": 1,
+        "sourceAlphaBlendFactor": 1,
+        "destinationColorBlendFactor": 0,
+        "destinationAlphaBlendFactor": 0,
+        "colorWriteMask": 15
+      },
+      "blendColor": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 0
+      },
+      "alphaToCoverage": false
+    },
+    "depthState": {
+      "enabled": true,
+      "writeEnabled": true,
+      "compareFunction": 1
+    },
+    "stencilState": {
+      "enabled": false,
+      "referenceValue": 0,
+      "mask": 255,
+      "writeMask": 255,
+      "compareFunctionFront": 7,
+      "compareFunctionBack": 7,
+      "passOperationFront": 0,
+      "passOperationBack": 0,
+      "failOperationFront": 0,
+      "failOperationBack": 0,
+      "zFailOperationFront": 0,
+      "zFailOperationBack": 0
+    },
+    "rasterState": {
+      "cullMode": 2,
+      "depthBias": 0,
+      "slopeScaledDepthBias": 0,
+      "_cullFaceEnable": true,
+      "_frontFaceInvert": false
+    },
+    "renderQueueType": 0
+  }
+}

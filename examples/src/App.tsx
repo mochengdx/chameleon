@@ -4,8 +4,7 @@ import { DefCameraControlPlugin, PipelineAdapterPlugin } from "@chameleon/plugin
 import { EnvironmentSkyboxPlugin } from "./plugins/EnvironmentSkyboxPlugin";
 // import { CameraControlPlugin } from "./plugins/CameraControlPlugin";
 
-import AniSceneCard from "./components/AniSceneCard";
-import ReplaceSceneCard from "./components/ReplaceSceneCard";
+import ShaderSceneCard from "./components/ShaderSceneCard";
 
 import Layout from "./layout";
 
@@ -93,8 +92,9 @@ export default function App() {
       <SceneCard title="Load GLTF and set evn" description="use GLTFLoaderPlugin load gltf" onCanvasReady={(loadGltfandSetEnvDemo)} />
       <SceneCard title="Load GLTF and and interaction with model" description="try to load" onCanvasReady={(loadBasicGltfAndFreeControlDemo)} />
       <ReplaceSceneCard/> */}
-      <ReplaceSceneCard />
-      <AniSceneCard />
+      {/* <ReplaceSceneCard />
+      <AniSceneCard /> */}
+      <ShaderSceneCard />
     </Layout>
   );
 }

@@ -9,6 +9,8 @@ import {
   WebGLGraphicDeviceOptions
 } from "@galacean/engine";
 import { SUPPORTED_ADAPTERS } from "./constants";
+import "./extensions/ANT_materials_shaders";
+import "./parsers/MyGLTFMaterialParser";
 
 /**
  * SpecRenderingContext - strongly-typed alias for this adapter's RenderingContext.
@@ -107,7 +109,8 @@ export class GalaceanAdapter
         // }
         const asset = await engine.resourceManager.load<GLTFResource>({
           type: AssetType.GLTF,
-          url: src
+          url: src,
+          params: { preferBinary: true, extensions: true }
         });
         if (!asset) throw new Error("engine.resourceManager.load returned falsy asset");
         return asset;

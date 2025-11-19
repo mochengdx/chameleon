@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ANT_materials_shader extension schema",
+  "description": "Schema for the top-level ANT_materials_shader glTF extension used by Chameleon",
+  "type": "object",
+  "required": ["version", "shaders"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Extension schema version"
+    },
+    "shaders": {
+      "type": "array",
+      "description": "Array of named shader definitions",
+      "items": {
+        "type": "object",
+        "required": ["id", "version", "shader"],
+        "properties": {
+          "id": { "type": "string", "description": "Unique shader id referenced by materials" },
+          "name": { "type": "string" },
+          "version": { "type": "string" },
+          "shader": {
+            "type": "object",
+            "required": ["vertex", "fragment"],
+            "properties": {
+              "vertex": { "type": "string", "description": "URL or relative path to vertex shader" },
+              "fragment": { "type": "string", "description": "URL or relative path to fragment shader" },
+              "defines": {
+                "type": "object",
+                "additionalProperties": {
+                  "anyOf": [{ "type": "string" }, { "type": "number" }]
+                }
+              },
+              "uniforms": {
+                "type": "object",
+                "additionalProperties": {
+                  "anyOf": [
+                    { "type": "number" },
+                    { "type": "boolean" },
+                    { "type": "array", "items": { "type": "number" } },
+                    {
+                      "type": "object",
+                      "required": ["type", "value"],
+                      "properties": {
+                        "type": { "type": "string" },
+                        "value": {}
+                      }
+                    }
+                  ]
+                }
+              },
+              "pipeline": {
+                "type": "object",
+                "properties": {
+                  "doubleSided": { "type": "boolean" },
+                  "alphaMode": { "type": "string", "enum": ["OPAQUE", "MASK", "BLEND"] },
+                  "depthTest": { "type": "boolean" },
+                  "depthWrite": { "type": "boolean" },
+                  "blending": { "type": "boolean" },
+                  "side": { "type": "number" }
+                },
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

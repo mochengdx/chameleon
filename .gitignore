@@ -140,3 +140,7 @@ vite.config.ts.timestamp-*
 
 # rollup.cache
 .rollup.cache
+
+# examples
+examples/**/node_modules
+examples/**/dist
