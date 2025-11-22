@@ -12,7 +12,6 @@ import React, { useEffect, useRef } from "react";
 import { EnvironmentSkyboxPlugin } from "../plugins/EnvironmentSkyboxPlugin";
 import { LoadingPlugin } from "../plugins/LoadingPlugin";
 
-import { ActionButton } from "./ActionButton";
 import SceneCard from "./SceneCard";
 
 /**
@@ -42,7 +41,7 @@ export default function ShaderSceneCard({}) {
       id: "demo",
       // source: "https://gw.alipayobjects.com/os/bmw-prod/5e3c1e4e-496e-45f8-8e05-f89f2bd5e4a4.glb"
 
-      source: "./assets/shaders/card/model.gltf"
+      source: "./assets/shaders/card/model.json"
     };
     let ctx: RenderingContext = {} as RenderingContext;
     try {
@@ -81,11 +80,7 @@ export default function ShaderSceneCard({}) {
 
   return (
     <SceneCard
-      externalNode={
-        <>
-          <ActionButton onClick={handleReload}>Use Edge Shader </ActionButton>
-        </>
-      }
+      externalNode={<>{/* <ActionButton onClick={handleReload}>Use Edge Shader </ActionButton> */}</>}
       title="Custom Shader Rendering Driven by glTF Extensions"
       loading={loading}
       description="This example demonstrates how to drive custom shader-based materials in Chameleon by 
