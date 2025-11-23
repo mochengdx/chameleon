@@ -104,8 +104,8 @@ export class GalaceanGLTFMaterialParser extends GLTFParser {
       return this.galaceanEngineMaterialParser.parse(context, index);
     // STEP 3: Resolve vertex/fragment sources (prefer plugin-resolved cache).
     const resolved = getResolvedExtras(material);
-    let vertexSource: string | null = resolved?.vertexSource;
-    let fragmentSource: string | null = resolved?.fragmentSource;
+    let vertexSource: string | null = resolved ? resolved.vertexSource : null;
+    let fragmentSource: string | null = resolved ? resolved.fragmentSource : null;
 
     try {
       const sources = await this.resolveShaderSources(shaderDef, vertexSource, fragmentSource);
