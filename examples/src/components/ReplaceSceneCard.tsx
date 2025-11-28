@@ -100,7 +100,7 @@ function getRandomReplacement() {
  * - Uses Tailwind CSS utility classes. Each item occupies one row with vertical spacing.
  */
 export default function ReplaceSceneCard() {
-  const pipieRef = useRef<{ pipeline: Pipeline | null; ctx: RenderingContext }>(null);
+  const pipelineRef = useRef<{ pipeline: Pipeline | null; ctx: RenderingContext }>(null);
   const [loading, setLoading] = React.useState<boolean>(false);
   console.log("Render ReplaceSceneCard", loading);
   const loadBasicGltfAndFreeControlDemo = async (canvas: HTMLCanvasElement) => {
@@ -136,7 +136,7 @@ export default function ReplaceSceneCard() {
       console.warn("Pipeline run failed:", e);
       setLoading(false);
     }
-    pipieRef.current = { pipeline, ctx };
+    pipelineRef.current = { pipeline, ctx };
     try {
       setPipelineForCanvas(canvas, { pipeline, ctx });
     } catch (err) {
@@ -147,10 +147,10 @@ export default function ReplaceSceneCard() {
   };
 
   const handleReplace = async () => {
-    if (!pipieRef.current) {
+    if (!pipelineRef.current) {
       return;
     }
-    const { pipeline, ctx } = pipieRef.current;
+    const { pipeline, ctx } = pipelineRef.current;
 
     // attach plugins
     const plugins: IPlugin[] = [
@@ -173,23 +173,23 @@ export default function ReplaceSceneCard() {
       console.error("Error during model replacement:", e);
       setLoading(false);
     }
-    pipieRef.current = { pipeline, ctx };
+    pipelineRef.current = { pipeline, ctx };
     return [pipeline, ctx];
   };
 
   const handleSkyBox = useCallback(async () => {
-    if (!pipieRef?.current?.pipeline) {
+    if (!pipelineRef?.current?.pipeline) {
       return;
     }
-    const { pipeline } = pipieRef.current;
+    const { pipeline } = pipelineRef.current;
     pipeline.use(new EnvironmentSkyboxPlugin());
   }, []);
 
   const handleUninstall = useCallback(async () => {
-    if (!pipieRef?.current?.pipeline) {
+    if (!pipelineRef?.current?.pipeline) {
       return;
     }
-    const { pipeline } = pipieRef.current;
+    const { pipeline } = pipelineRef.current;
     pipeline.uninstall("EnvironmentSkyboxPlugin");
   }, []);
 
@@ -199,7 +199,7 @@ export default function ReplaceSceneCard() {
   useEffect(() => {
     return () => {
       try {
-        const entry = pipieRef.current;
+        const entry = pipelineRef.current;
         if (entry && entry.ctx && entry.ctx.container) {
           disposePipelineForCanvas(entry.ctx.container as HTMLElement);
         }

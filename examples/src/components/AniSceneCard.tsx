@@ -23,7 +23,7 @@ import SceneCard from "./SceneCard";
  * - Uses Tailwind CSS utility classes. Each item occupies one row with vertical spacing.
  */
 export default function AniSceneCard() {
-  const pipieRef = useRef<{ pipeline: Pipeline | null; ctx: RenderingContext }>(null);
+  const pipelineRef = useRef<{ pipeline: Pipeline | null; ctx: RenderingContext }>(null);
   const [loading, setLoading] = React.useState<boolean>(false);
   const loadBasicGltfAndFreeControlDemo = async (canvas: HTMLCanvasElement) => {
     const existing = getPipelineForCanvas(canvas);
@@ -67,7 +67,7 @@ export default function AniSceneCard() {
       console.warn("Pipeline run failed:", e);
       setLoading(false);
     }
-    pipieRef.current = { pipeline, ctx };
+    pipelineRef.current = { pipeline, ctx };
     try {
       setPipelineForCanvas(canvas, { pipeline: pipeline!, ctx });
     } catch (err) {
@@ -78,10 +78,10 @@ export default function AniSceneCard() {
   };
 
   const handleReload = async () => {
-    if (!pipieRef.current) {
+    if (!pipelineRef.current) {
       return;
     }
-    const { pipeline, ctx } = pipieRef.current;
+    const { pipeline, ctx } = pipelineRef.current;
 
     // attach plugins
     const plugins: IPlugin[] = [];
@@ -99,7 +99,7 @@ export default function AniSceneCard() {
       console.error("Error during model replacement:", e);
       setLoading(false);
     }
-    pipieRef.current = { pipeline, ctx };
+    pipelineRef.current = { pipeline, ctx };
     return [pipeline, ctx];
   };
 
@@ -109,7 +109,7 @@ export default function AniSceneCard() {
   useEffect(() => {
     return () => {
       try {
-        const entry = pipieRef.current;
+        const entry = pipelineRef.current;
         if (entry && entry.ctx && entry.ctx.container) {
           disposePipelineForCanvas(entry.ctx.container as HTMLElement);
         }

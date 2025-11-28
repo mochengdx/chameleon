@@ -16,7 +16,7 @@ import SceneCard from "./SceneCard";
  * - Uses Tailwind CSS utility classes. Each item occupies one row with vertical spacing.
  */
 export default function ShaderSceneCard() {
-  const pipieRef = useRef<{ pipeline: Pipeline | null; ctx: RenderingContext }>(null);
+  const pipelineRef = useRef<{ pipeline: Pipeline | null; ctx: RenderingContext }>(null);
   const [loading, setLoading] = React.useState<boolean>(false);
   const loadBasicGltfAndFreeControlDemo = async (canvas: HTMLCanvasElement) => {
     const existing = getPipelineForCanvas(canvas);
@@ -53,7 +53,7 @@ export default function ShaderSceneCard() {
       console.warn("Pipeline run failed:", e);
       setLoading(false);
     }
-    pipieRef.current = { pipeline, ctx };
+    pipelineRef.current = { pipeline, ctx };
     try {
       setPipelineForCanvas(canvas, { pipeline: pipeline!, ctx });
     } catch (err) {
@@ -69,7 +69,7 @@ export default function ShaderSceneCard() {
   useEffect(() => {
     return () => {
       try {
-        const entry = pipieRef.current;
+        const entry = pipelineRef.current;
         if (entry?.ctx?.container) {
           disposePipelineForCanvas(entry.ctx.container as HTMLElement);
         }
