@@ -9,7 +9,7 @@ import {
   registerGLTFParser,
   Shader
 } from "@galacean/engine";
-import { ANTShader } from "packages/core/dist/types";
+import type { ANTShader } from "@chameleon/core";
 import ANTMaterialParser from "./ANTMaterialParser";
 import { applyANTPropertiesToShader } from "./ANTPropertyBinder";
 import {

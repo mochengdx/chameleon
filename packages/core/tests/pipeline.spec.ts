@@ -44,7 +44,7 @@ describe("GLPipeline baseline", () => {
     const adapter = new MockAdapter();
     const pipeline = new Pipeline(adapter);
     // simple loader plugin
-    pipeline.hooks.engineInit.tapPromise("initEngine", async (ctx: any) => {
+    pipeline.hooks.initEngine.tapPromise("initEngine", async (ctx: any) => {
       await adapter.initEngine(ctx.container);
     });
     pipeline.hooks.resourceLoad.tapPromise("load", async (ctx: any) => {
