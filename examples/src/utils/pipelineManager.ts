@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Pipeline, RenderingContext } from "@chameleon/core";
 
 type PipelineEntry = { pipeline: Pipeline; ctx?: RenderingContext };

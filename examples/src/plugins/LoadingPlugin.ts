@@ -1,8 +1,8 @@
-import type { IPlugin, Pipeline, RenderingContext } from "@chameleon/core";
+import type { IPlugin, Pipeline } from "@chameleon/core";
 
 export class LoadingPlugin implements IPlugin {
   name = "LoadingPlugin";
-  
+
   updateLoading: (loading: boolean) => void;
 
   constructor(updateLoading: (loading: boolean) => void) {

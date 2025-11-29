@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { GalaceanAdapter } from "@chameleon/adapters";
 import type { IPlugin, RenderingContext } from "@chameleon/core";
 import { attachLoggerToPipeline, Pipeline, type RenderRequest } from "@chameleon/core";
@@ -102,7 +103,6 @@ export default function AniSceneCard() {
     pipieRef.current = { pipeline, ctx };
     return [pipeline, ctx];
   };
-
 
   // cleanup on unmount: dispose pipeline if exists
   useEffect(() => {

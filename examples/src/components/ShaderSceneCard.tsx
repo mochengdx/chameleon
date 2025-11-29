@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { GalaceanAdapter } from "@chameleon/adapters";
 import type { RenderingContext } from "@chameleon/core";
 import { attachLoggerToPipeline, Pipeline, type RenderRequest } from "@chameleon/core";

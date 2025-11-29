@@ -1,13 +1,6 @@
 import type { IPlugin, Pipeline, RenderingContext } from "@chameleon/core";
-import {
-  AmbientLight,
-  AssetType,
-  BackgroundMode,
-  PrimitiveMesh,
-  WebGLEngine,
-  Scene,
-  SkyBoxMaterial
-} from "@galacean/engine";
+import type { AmbientLight, WebGLEngine, Scene } from "@galacean/engine";
+import { AssetType, BackgroundMode, PrimitiveMesh, SkyBoxMaterial } from "@galacean/engine";
 
 export class EnvironmentSkyboxPlugin implements IPlugin {
   name = "EnvironmentSkyboxPlugin";

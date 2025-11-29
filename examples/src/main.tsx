@@ -1,12 +1,12 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './styles.css'
-import App from './App'
+/* eslint-disable react/react-in-jsx-scope */
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App";
+import "./styles.css";
 // import Layout from './layout'
 
-
-createRoot(document.getElementById('root')!).render(
-  // <StrictMode>
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
     <App />
-  // </StrictMode>,
-)
+  </StrictMode>
+);

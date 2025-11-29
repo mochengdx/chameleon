@@ -1,5 +1,6 @@
 // ...existing code...
-import React, { useEffect, useRef, useCallback } from "react";
+/* eslint-disable react/react-in-jsx-scope */
+import { useEffect, useRef } from "react";
 
 export type BlockProps = {
   id?: string;
@@ -21,7 +22,7 @@ export default function Block({
   description = "",
   className = "",
   canvasHeight = 240,
-  onCanvasReady,
+  onCanvasReady
 }: BlockProps) {
   const instanceIdRef = useRef(id ?? `block-${Math.random().toString(36).slice(2, 9)}`);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -63,7 +64,13 @@ export default function Block({
     if (!canvas) return;
 
     if (onCanvasReady) {
-      try { onCanvasReady(canvas); } catch {}
+      try {
+        onCanvasReady(canvas);
+      } catch (err) {
+        // surface a local warning to aid debugging without failing builds
+        // eslint-disable-next-line no-console
+        console.warn("onCanvasReady threw:", err);
+      }
     }
 
     // resizeCanvas(canvas, canvasHeight);
@@ -107,7 +114,7 @@ export default function Block({
               WebkitLineClamp: 2,
               WebkitBoxOrient: "vertical",
               overflow: "hidden",
-              textOverflow: "ellipsis",
+              textOverflow: "ellipsis"
             }}
             title={description}
           >
@@ -119,11 +126,7 @@ export default function Block({
       {/* Canvas area: center the canvas horizontally and vertically within the allocated height */}
       <div className="p-3">
         {/* use flex container to center canvas; keep full width but center child if it becomes narrower */}
-        <div
-          className="w-full flex items-center justify-center"
-          style={{ height: canvasHeight }}
-          aria-hidden="false"
-        >
+        <div className="w-full flex items-center justify-center" style={{ height: canvasHeight }} aria-hidden="false">
           <canvas
             ref={canvasRef}
             // ensure canvas stays centered; mx-auto is redundant with flex but harmless

@@ -9,7 +9,7 @@ export type LoadingSpinnerProps = {
 export default function LoadingSpinner({
   text = "Loading...",
   sizeClass = "w-4 h-4",
-  className = "",
+  className = ""
 }: LoadingSpinnerProps) {
   return (
     <div className={`inline-flex items-center space-x-2 ${className}`} role="status" aria-live="polite">
