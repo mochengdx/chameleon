@@ -35,7 +35,7 @@ export default function SceneCard({
       // eslint-disable-next-line no-console
       console.warn("onCanvasReady threw:", err);
     }
-  }, [onCanvasReady]);
+  }, []);
 
   return (
     <div id={rootId} className={`mx-auto max-w-7xl px-6 lg:px-8 ${className}`}>
