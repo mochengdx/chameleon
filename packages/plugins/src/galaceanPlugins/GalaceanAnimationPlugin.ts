@@ -20,7 +20,7 @@ type SpecCtx = RenderingContext<WebGLEngine, Scene, Camera, any, GLTFResource, E
 type PartialAnimationMap = Partial<Record<"idle" | "enter" | "click", string>>;
 
 /**
- * GalceanAnimationPlugin
+ * GalaceanAnimationPlugin
  *
  * Responsibility:
  * - discover Animator on the parsed model
@@ -29,8 +29,8 @@ type PartialAnimationMap = Partial<Record<"idle" | "enter" | "click", string>>;
  * - on container click, play click animation (model-aware when possible)
  * - ensure deterministic cleanup of DOM listeners
  */
-export class GalceanAnimationPlugin implements IPlugin {
-  public name = "GalceanAnimationPlugin";
+export class GalaceanAnimationPlugin implements IPlugin {
+  public name = "GalaceanAnimationPlugin";
 
   constructor(public animationMap: PartialAnimationMap) {}
 

@@ -10,6 +10,7 @@ import {
   Shader
 } from "@galacean/engine";
 import { ShaderCache } from "../../utils";
+import type { ANTShader } from "@chameleon/core";
 import ANTMaterialParser from "./ANTMaterialParser";
 import { applyANTPropertiesToShader } from "./ANTPropertyBinder";
 import {
