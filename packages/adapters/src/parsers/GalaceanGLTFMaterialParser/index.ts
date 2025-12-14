@@ -1,14 +1,15 @@
+import type { ANTShader } from "@chameleon/core";
+import type { Engine, GLTFParserContext } from "@galacean/engine";
 import {
   BaseMaterial,
-  Engine,
   GLTFMaterialParser,
   GLTFParser,
-  GLTFParserContext,
   GLTFParserType,
   PBRMaterial,
   registerGLTFParser,
   Shader
 } from "@galacean/engine";
+import { ShaderCache } from "../../utils";
 import type { ANTShader } from "@chameleon/core";
 import ANTMaterialParser from "./ANTMaterialParser";
 import { applyANTPropertiesToShader } from "./ANTPropertyBinder";
@@ -92,9 +93,8 @@ export class GalaceanGLTFMaterialParser extends GLTFParser {
     const material = new PBRMaterial(engine);
     material.name = materialInfo?.name || `ant-material-${index}`;
     // stash extension metadata on extras.__ant for plugin/adapter later use
-    // ensure extras container exists and seed schema/shaderRef
-    // prefer existing values when present
-    // @ts-ignore
+    // ensure extras container exists and seed schema/shaderRef. The helper
+    // intentionally mutates the material extras in some runtime shapes.
     ensureAntExtras(material, ext, ext && ext.shader);
     const shaderName = (shaderDef && shaderDef.id) || `ant_shader_${String(ext.shader)}`;
 
@@ -114,33 +114,49 @@ export class GalaceanGLTFMaterialParser extends GLTFParser {
       // persist resolved sources back onto material.extras.__ant.resolved
       try {
         // persist resolved sources back onto extras
-        // use helper to keep code concise
         persistResolvedSources(material, vertexSource, fragmentSource);
-      } catch {}
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn("Failed to persist resolved shader sources:", err);
+      }
 
       // If either stage missing -> abort to conservative material
-      if (!vertexSource || !fragmentSource) return this.galaceanEngineMaterialParser.parse(context, index);
+      if (!vertexSource || !fragmentSource) {
+        return this.galaceanEngineMaterialParser.parse(context, index);
+      }
     } catch (e) {
       // failed to fetch/resolve sources -> conservative material
+      // eslint-disable-next-line no-console
+      console.warn("Failed to resolve shader sources:", e);
       return this.galaceanEngineMaterialParser.parse(context, index);
     }
 
-    // STEP 4: Attempt to create or reuse a Shader and construct a shader-backed material.
+    // STEP 4: Attempt to create or reuse a Shader and construct
+    // a shader-backed material.
     try {
-      // const shaderName = shaderDef && shaderDef.id ? `ant_shader_${shaderDef.id}` : `ant_shader_${String(shaderDef)}`;
+      // previous helper logic for shader name omitted for brevity
       const existsShader = Shader.find(shaderName);
       let shader: Shader | null = null;
       if (existsShader) shader = existsShader;
       else shader = Shader.create(shaderName, vertexSource as string, fragmentSource as string);
       if (shader) {
-        const shaderMaterial = new BaseMaterial(engine!, shader);
+        // Use ShaderCache to avoid recompiling identical shader sources/defines
+        const definesObj = shaderDef?.shader?.defines || {};
+        const shaderInstance = ShaderCache.getOrCreate(
+          shaderName,
+          vertexSource as string,
+          fragmentSource as string,
+          definesObj
+        );
+        const shaderMaterial = new BaseMaterial(engine!, shaderInstance);
         shaderMaterial.name = material.name;
         // apply pipeline flags and defines via helpers
         // Merge pipeline flags: start from the top-level shader definition
         // and override with any material-level (`ANT_materials_shader`) hints.
         // This preserves unspecified top-level defaults while allowing per-
         // material overrides.
-        const mergedPipeline = Object.assign({}, shaderDef?.shader?.pipeline || {}, ext?.pipeline || {});
+        const topPipeline = shaderDef?.shader?.pipeline || {};
+        const mergedPipeline = Object.assign({}, topPipeline, ext?.pipeline || {});
         const pipeline = mergedPipeline;
         applyPipelineFlags(shaderMaterial, pipeline, materialInfo);
         applyShaderDefines(shaderMaterial, shaderDef?.shader?.defines || {});
@@ -152,7 +168,9 @@ export class GalaceanGLTFMaterialParser extends GLTFParser {
         return shaderMaterial;
       }
     } catch (e) {
-      // fallthrough to conservative material
+      // failed to create/apply shader; fall back to conservative material
+      // eslint-disable-next-line no-console
+      console.warn("Failed to create shader-backed material:", e);
     }
 
     return this.galaceanEngineMaterialParser.parse(context, index);

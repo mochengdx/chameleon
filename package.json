@@ -13,7 +13,10 @@
     "lint": "eslint packages/** --ext .js,.ts,.tsx,.json --ignore-pattern node_modules/*",
     "lint:fix": "eslint packages/** --ext .js,.ts,.tsx,.json --ignore-pattern node_modules/* --fix",
     "prepare": "husky install",
-    "clean": "pnpm -w run clean"
+    "clean": "pnpm -w run clean",
+    "type:check": "pnpm -w -s tsc --noEmit",
+    "typecheck": "pnpm -w -s tsc --noEmit",
+    "ci": "pnpm -w -s tsc --noEmit && pnpm -w -s eslint . --ext .ts,.tsx,.js,.jsx"
   },
   "keywords": [
     "3D",
@@ -54,6 +57,7 @@
     "lint-staged": "^16.2.3",
     "prettier": "^3.6.2",
     "react": "^18.3.1",
+    "zustand": "^4.5.0",
     "rollup": "^4.52.4",
     "rollup-plugin-dts": "^6.2.3",
     "rollup-plugin-terser": "^7.0.2",
@@ -62,9 +66,12 @@
     "zustand": "^4.5.0"
   },
   "lint-staged": {
-    "*.ts": "eslint --fix",
-    "*.js": "eslint --fix",
-    "*.json": "prettier --write"
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --cache --fix"
+    ],
+    "*.json": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "rimraf": "^5.0.10",

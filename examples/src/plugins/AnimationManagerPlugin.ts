@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { IPlugin, Pipeline, RenderingContext } from "@chameleon/core";
-import { Animator, Entity, GLTFResource, Scene, WebGLEngine } from "@galacean/engine";
+import type { Entity, GLTFResource, Scene, WebGLEngine } from "@galacean/engine";
+import { Animator } from "@galacean/engine";
 
 type SpecCtx = RenderingContext<WebGLEngine, Scene, Entity, any, GLTFResource, Entity>;
 
@@ -13,12 +15,14 @@ type SpecCtx = RenderingContext<WebGLEngine, Scene, Entity, any, GLTFResource, E
  * - Listens for user clicks on the container to trigger a "click" animation.
  * - Runs an idle animation when no other action is active.
  * - If a requested animation is started while a current animation hasn't finished,
- *   the plugin attempts a cross-fade (if supported) or immediately plays the next clip.
- * - Uses the pipeline.renderLoop hook to track elapsed playback time and transition states.
+ *   the plugin attempts a cross-fade (if supported) or immediately plays the
+ *   next clip.
+ * - Uses the pipeline.renderLoop hook to track elapsed playback time
+ *   and transition states.
  */
 export class AnimationManagerPlugin implements IPlugin {
   public name = "AnimationManagerPlugin";
-  //['ani_bipedStaticV01_exhibit001', 'ani_bipedIdleV01_idle001', 'ani_bipedPreV01_dance001', 'ani_bipedPreV01_entrance001']
+  // sample known clip names (for reference)
 
   // internal state
   private _onClick: () => void = () => {};
@@ -38,7 +42,10 @@ export class AnimationManagerPlugin implements IPlugin {
         const found: Animator[] = [];
         try {
           targetEngineEntity.getComponentsIncludeChildren(Animator, found);
-        } catch {}
+        } catch (err) {
+          // ignore errors from getComponentsIncludeChildren on some engine versions
+          void err;
+        }
         animator = (found && found[0]) as Animator | undefined;
       }
 
@@ -51,7 +58,6 @@ export class AnimationManagerPlugin implements IPlugin {
       const clips: Array<{ name: string; duration: number }> = [];
       try {
         // try animator.clips if present
-        // @ts-ignore - runtime shape may vary between engine versions
         const aClips = (animator as any).clips || (ctx.parsedGLTF as any)?.animations || [];
         for (const c of aClips) {
           const name = c?.name || String(c?.trackName || clips.length);
@@ -59,8 +65,9 @@ export class AnimationManagerPlugin implements IPlugin {
             typeof c?.duration === "number" ? c.duration : typeof c?.length === "number" ? c.length : 1.0;
           clips.push({ name, duration });
         }
-      } catch (e) {
+      } catch (err) {
         // fall back to a single unnamed clip
+        void err;
       }
 
       if (clips.length === 0) {
@@ -87,6 +94,8 @@ export class AnimationManagerPlugin implements IPlugin {
       let requested: { name: string; fade: number } | null = null;
 
       const playClip = (clipName: string, fade = 0.25) => {
+        // mark fade as used to satisfy linter/TS no-unused-vars when crossFade isn't used
+        void fade;
         // attempt cross-fade if supported
         try {
           if (typeof animator?.crossFade === "function") {
@@ -162,11 +171,14 @@ export class AnimationManagerPlugin implements IPlugin {
 
       try {
         pipeline.hooks.renderLoop.tap(this.name, this._renderLoopTap);
-      } catch {
+      } catch (err) {
         // older tapable versions may only support tapPromise; try a fallback
+        void err;
         try {
           pipeline.hooks.renderLoop.tapPromise(this.name, async () => {});
-        } catch {}
+        } catch (err2) {
+          void err2;
+        }
       }
 
       // store cleanup on dispose (register a cleanup to remove event listeners and taps)
@@ -184,6 +196,8 @@ export class AnimationManagerPlugin implements IPlugin {
           (t: any) => t.name !== name
         );
       }
-    } catch {}
+    } catch (err) {
+      void err;
+    }
   }
 }

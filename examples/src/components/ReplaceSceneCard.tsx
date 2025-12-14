@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { GalaceanAdapter } from "@chameleon/adapters";
 import type { IPlugin, RenderingContext } from "@chameleon/core";
 import { attachLoggerToPipeline, Pipeline, type RenderRequest } from "@chameleon/core";
@@ -5,6 +6,7 @@ import { DefCameraControlPlugin, DefGalaceanInteractionPlugin, PipelineAdapterPl
 import React, { useCallback, useEffect, useRef } from "react";
 import { EnvironmentSkyboxPlugin } from "../plugins/EnvironmentSkyboxPlugin";
 import { LoadingPlugin } from "../plugins/LoadingPlugin";
+import { disposePipelineForCanvas, getPipelineForCanvas, setPipelineForCanvas } from "../utils/pipelineManager";
 import SceneCard from "./SceneCard";
 
 import { ActionButton } from "./ActionButton";
@@ -98,23 +100,30 @@ function getRandomReplacement() {
  * - One-row list item with left (title + description) and right (canvas demo).
  * - Uses Tailwind CSS utility classes. Each item occupies one row with vertical spacing.
  */
-export default function ReplaceSceneCard({}) {
+export default function ReplaceSceneCard() {
   const pipieRef = useRef<{ pipeline: Pipeline | null; ctx: RenderingContext }>(null);
   const [loading, setLoading] = React.useState<boolean>(false);
   console.log("Render ReplaceSceneCard", loading);
   const loadBasicGltfAndFreeControlDemo = async (canvas: HTMLCanvasElement) => {
-    const adapter = new GalaceanAdapter();
-    const pipeline = new Pipeline(adapter);
-    attachLoggerToPipeline(pipeline, console);
-    // attach plugins
-    const plugins = [
-      new LoadingPlugin(setLoading),
-      new PipelineAdapterPlugin(),
-      new DefCameraControlPlugin(),
-      new DefGalaceanInteractionPlugin(),
-      new EnvironmentSkyboxPlugin()
-    ];
-    plugins.forEach((p) => pipeline.use(p));
+    // Reuse pipeline per canvas when possible
+    const existing = getPipelineForCanvas(canvas);
+    let pipeline: Pipeline | undefined;
+    if (existing) {
+      pipeline = existing.pipeline;
+    } else {
+      const adapter = new GalaceanAdapter();
+      pipeline = new Pipeline(adapter);
+      attachLoggerToPipeline(pipeline, console);
+      // attach plugins
+      const plugins = [
+        new LoadingPlugin(setLoading),
+        new PipelineAdapterPlugin(),
+        new DefCameraControlPlugin(),
+        new DefGalaceanInteractionPlugin(),
+        new EnvironmentSkyboxPlugin()
+      ];
+      plugins.forEach((p) => pipeline!.use(p));
+    }
 
     const data: RenderRequest = {
       id: "demo",
@@ -123,8 +132,18 @@ export default function ReplaceSceneCard({}) {
     let ctx: RenderingContext = {} as RenderingContext;
     try {
       ctx = await pipeline.run(canvas as HTMLCanvasElement, data);
-    } catch (e: any) {}
+    } catch (e: any) {
+      // eslint-disable-next-line no-console
+      console.warn("Pipeline run failed:", e);
+      setLoading(false);
+    }
     pipieRef.current = { pipeline, ctx };
+    try {
+      setPipelineForCanvas(canvas, { pipeline, ctx });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("setPipelineForCanvas failed:", err);
+    }
     return [pipeline, ctx];
   };
 
@@ -151,6 +170,7 @@ export default function ReplaceSceneCard({}) {
       ctx.abortController.abort();
       await pipeline!.runFrom("resourceLoad", ctx);
     } catch (e: any) {
+      // eslint-disable-next-line no-console
       console.error("Error during model replacement:", e);
       setLoading(false);
     }
@@ -175,6 +195,21 @@ export default function ReplaceSceneCard({}) {
   }, []);
 
   useEffect(() => {}, []);
+
+  // cleanup on unmount: dispose pipeline if exists
+  useEffect(() => {
+    return () => {
+      try {
+        const entry = pipieRef.current;
+        if (entry && entry.ctx && entry.ctx.container) {
+          disposePipelineForCanvas(entry.ctx.container as HTMLElement);
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn("Error during cleanup:", err);
+      }
+    };
+  }, []);
 
   return (
     <SceneCard

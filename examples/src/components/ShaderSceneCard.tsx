@@ -1,17 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { GalaceanAdapter } from "@chameleon/adapters";
-import type { IPlugin, RenderingContext } from "@chameleon/core";
+import type { RenderingContext } from "@chameleon/core";
 import { attachLoggerToPipeline, Pipeline, type RenderRequest } from "@chameleon/core";
-import {
-  ANTMaterialShaderPlugin,
-  DefCameraControlPlugin,
-  DefGalaceanInteractionPlugin,
-  PipelineAdapterPlugin
-} from "@chameleon/plugins";
+import { DefCameraControlPlugin, DefGalaceanInteractionPlugin, PipelineAdapterPlugin } from "@chameleon/plugins";
 import React, { useEffect, useRef } from "react";
 
 import { EnvironmentSkyboxPlugin } from "../plugins/EnvironmentSkyboxPlugin";
 import { LoadingPlugin } from "../plugins/LoadingPlugin";
 
+import { disposePipelineForCanvas, getPipelineForCanvas, setPipelineForCanvas } from "../utils/pipelineManager";
 import SceneCard from "./SceneCard";
 
 /**
@@ -19,23 +16,29 @@ import SceneCard from "./SceneCard";
  * - One-row list item with left (title + description) and right (canvas demo).
  * - Uses Tailwind CSS utility classes. Each item occupies one row with vertical spacing.
  */
-export default function ShaderSceneCard({}) {
+export default function ShaderSceneCard() {
   const pipieRef = useRef<{ pipeline: Pipeline | null; ctx: RenderingContext }>(null);
   const [loading, setLoading] = React.useState<boolean>(false);
   const loadBasicGltfAndFreeControlDemo = async (canvas: HTMLCanvasElement) => {
-    const adapter = new GalaceanAdapter();
-    const pipeline = new Pipeline(adapter);
-    attachLoggerToPipeline(pipeline, console);
-    // attach plugins
-    const plugins = [
-      new LoadingPlugin(setLoading),
-      new PipelineAdapterPlugin(),
-      new DefCameraControlPlugin(),
-      new DefGalaceanInteractionPlugin(),
-      new EnvironmentSkyboxPlugin()
-      // new GalaceanModelClickPlugin()
-    ];
-    plugins.forEach((p) => pipeline.use(p));
+    const existing = getPipelineForCanvas(canvas);
+    let pipeline: Pipeline | undefined;
+    if (existing) {
+      pipeline = existing.pipeline;
+    } else {
+      const adapter = new GalaceanAdapter();
+      pipeline = new Pipeline(adapter);
+      attachLoggerToPipeline(pipeline, console);
+      // attach plugins
+      const plugins = [
+        new LoadingPlugin(setLoading),
+        new PipelineAdapterPlugin(),
+        new DefCameraControlPlugin(),
+        new DefGalaceanInteractionPlugin(),
+        new EnvironmentSkyboxPlugin()
+        // new GalaceanModelClickPlugin()
+      ];
+      plugins.forEach((p) => pipeline!.use(p));
+    }
 
     const data: RenderRequest = {
       id: "demo",
@@ -46,37 +49,37 @@ export default function ShaderSceneCard({}) {
     let ctx: RenderingContext = {} as RenderingContext;
     try {
       ctx = await pipeline.run(canvas as HTMLCanvasElement, data);
-    } catch (e: any) {}
-    pipieRef.current = { pipeline, ctx };
-    return [pipeline, ctx];
-  };
-
-  const handleReload = async () => {
-    if (!pipieRef.current) {
-      return;
-    }
-    const { pipeline, ctx } = pipieRef.current;
-
-    // attach plugins
-    const plugins: IPlugin[] = [new ANTMaterialShaderPlugin()];
-    plugins.forEach((p) => pipeline!.use(p));
-    const data: RenderRequest = {
-      id: "demo",
-      source: "./assets/shaders/card/model.gltf"
-    };
-    ctx.request = data;
-    try {
-      ctx.abortController.abort();
-      await pipeline!.runFrom("resourceLoad", ctx);
     } catch (e: any) {
-      console.error("Error during model replacement:", e);
+      // eslint-disable-next-line no-console
+      console.warn("Pipeline run failed:", e);
       setLoading(false);
     }
     pipieRef.current = { pipeline, ctx };
+    try {
+      setPipelineForCanvas(canvas, { pipeline: pipeline!, ctx });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("setPipelineForCanvas failed:", err);
+    }
     return [pipeline, ctx];
   };
 
   useEffect(() => {}, []);
+
+  // cleanup on unmount: dispose pipeline if exists
+  useEffect(() => {
+    return () => {
+      try {
+        const entry = pipieRef.current;
+        if (entry?.ctx?.container) {
+          disposePipelineForCanvas(entry.ctx.container as HTMLElement);
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn("Error during cleanup:", err);
+      }
+    };
+  }, []);
 
   return (
     <SceneCard
