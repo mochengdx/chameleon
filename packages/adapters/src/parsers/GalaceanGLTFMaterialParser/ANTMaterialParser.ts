@@ -51,6 +51,11 @@ export class ANTMaterialParser {
     const ext = this.getMaterialExtension(materialIndex);
     if (!ext) return null;
     const index = ext.shader;
+    // Support multiple possible locations for shader definitions to handle
+    // different GLTF extension versions and formats:
+    // 1. Standard ANT_materials_shader extension path (gltf.extensions.ANT_materials_shader.shaders)
+    // 2. Legacy top-level shaders array (gltf.shaders) - used in older GLTF files
+    // 3. Alternative extension location (gltf.extensions.shaders) - used in some variants
     const shaders =
       this.gltf?.extensions?.ANT_materials_shader?.shaders ||
       (this.gltf as any)?.shaders ||
