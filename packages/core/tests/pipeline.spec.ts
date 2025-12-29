@@ -1,42 +1,35 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+import type { EngineAdapter } from "../src/EngineAdapter";
 import { Pipeline } from "../src/Pipeline";
-import { EngineAdapter } from "../src/EngineAdapter";
-import { RenderingContext } from "../src/RenderingContext";
+import type { RenderingContext } from "../src/RenderingContext";
 
 class MockAdapter implements EngineAdapter {
-  createTextureFromElement(el: HTMLVideoElement | HTMLImageElement) {
-    throw new Error("Method not implemented.");
+  public readonly name = "mock";
+
+  public async initEngine(container: HTMLElement, ctx: RenderingContext, _options?: any): Promise<any> {
+    // Minimal fake handles; real adapters will populate engineHandles.
+    return { engine: {}, scene: {}, camera: {} };
   }
-  updateVideoTexture?(el: HTMLVideoElement): void {
-    throw new Error("Method not implemented.");
-  }
-  // initEngine: ((canvas: HTMLCanvasElement, options?: any) => Promise<any>) | undefined;
-  // loadTextureFromURL?: ((url: string, opts?: any) => Promise<any>) | undefined;
-  // createTextureFromElement?: ((el: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement) => any) | undefined;
-  // createScene?: (() => any) | undefined;
-  // createMeshFromParsedNode?: ((parsedNode: ParsedNode, ctx: RenderingContext) => any) | undefined;
-  // createMaterialFromParsed?: ((parsedMaterial: ParsedMaterial, ctx: RenderingContext) => any) | undefined;
-  // requestFrame?: ((ctx: RenderingContext) => void) | undefined;
-  // setMeshMaterial?: ((mesh: any, material: any) => void) | undefined;
-  name = "mock";
-  async initEngine(canvas: HTMLCanvasElement, options?: any): Promise<any> {
-    // mock implementation
-    return;
-  }
-  async loadResource(src: string, ctx: RenderingContext) {
+
+  public async loadResource(_src: string, _ctx: RenderingContext): Promise<any> {
     return { asset: { version: "2.0" } };
   }
-  async parseResource(raw: any) {
-    return raw;
+
+  public async parseResource(raw: any, _ctx: RenderingContext): Promise<any> {
+    return { entity: raw, gltf: raw };
   }
-  async buildScene(parsed: any) {
-    return { scene: {} };
+
+  public async buildScene(_parsed: any, _ctx: RenderingContext): Promise<void> {
+    // no-op
   }
-  startRenderLoop(ctx: any, onFrame: any) {
-    // don't run RAF
+
+  public startRenderLoop(_ctx: any, _onFrame: (dtMs: number) => void) {
+    // no-op (avoid RAF in tests)
   }
-  stopRenderLoop() {}
-  dispose() {}
+
+  public dispose() {
+    // no-op
+  }
 }
 
 describe("GLPipeline baseline", () => {
@@ -52,15 +45,16 @@ describe("GLPipeline baseline", () => {
       return ctx;
     });
     pipeline.hooks.resourceParse.tapPromise("parse", async (ctx: any) => {
-      ctx.parsedGLTF = await adapter.parseResource(ctx.rawAssets);
-      return ctx;
+      const parsed = await adapter.parseResource(ctx.rawAssets, ctx);
+      ctx.parsed = parsed;
+      return undefined;
     });
     pipeline.hooks.buildScene.tapPromise("build", async (ctx: any) => {
-      await adapter.buildScene(ctx.parsedGLTF);
+      await adapter.buildScene(ctx.parsed?.entity ?? ctx.parsed, ctx);
       return ctx;
     });
 
-    const container = document.createElement("div");
+    const container = {} as any as HTMLElement;
     const ctx = await pipeline.run(container as any, { id: "1", source: {} } as any);
     expect(ctx).toBeDefined();
   });

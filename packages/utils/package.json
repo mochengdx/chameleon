@@ -7,10 +7,10 @@
   "type": "module",
   "scripts": {
     "build": "tsc -b",
-    "test": "vitest"
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@galacean/engine": "^1.6.5",
+    "@galacean/engine": "^1.6.6",
     "@chameleon/core": "workspace:*",
     "three": "^0.180.0"
   },

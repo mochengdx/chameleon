@@ -1,5 +1,6 @@
 import type { ANTMaterialExtension, ANTShader, ANTUniform, GLTF, Material } from "@chameleon/core";
-import { GLTFParserContext, GLTFParserType } from "@galacean/engine";
+import type { GLTFParserContext } from "@galacean/engine";
+import { GLTFParserType } from "@galacean/engine";
 
 /**
  * ANTMaterialParser
@@ -50,8 +51,11 @@ export class ANTMaterialParser {
     const ext = this.getMaterialExtension(materialIndex);
     if (!ext) return null;
     const index = ext.shader;
-    const shaders = this.gltf?.extensions?.ANT_materials_shader?.shaders;
-    if (!shaders) return null;
+    const shaders =
+      this.gltf?.extensions?.ANT_materials_shader?.shaders ||
+      (this.gltf as any)?.shaders ||
+      (this.gltf as any)?.extensions?.shaders;
+    if (!Array.isArray(shaders)) return null;
     if (typeof index === "number") return shaders[index] || null;
     if (typeof index === "string") {
       // Try to find by name or id
@@ -68,7 +72,8 @@ export class ANTMaterialParser {
     const ext = this.getMaterialExtension(materialIndex);
     if (!ext) return {};
     const shaderDef = this.getShaderDef(materialIndex);
-    const shaderProps: Record<string, ANTUniform> = shaderDef?.shader?.properties || {};
+    const shaderProps: Record<string, ANTUniform> =
+      (shaderDef as any)?.shader?.properties || (shaderDef as any)?.properties || {};
     const materialProps: Record<string, ANTUniform> = ext.properties || {};
     // Return a shallow merge where materialProps override shaderProps
     return Object.assign({}, shaderProps, materialProps);

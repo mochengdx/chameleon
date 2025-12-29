@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc -b",
-    "test": "vitest --environment jsdom"
+    "test": "vitest run --environment jsdom"
   },
   "dependencies": {
     "@chameleon/core": "workspace:*"
@@ -18,6 +18,6 @@
     "jsdom": "^22.1.0"
   },
   "peerDependencies": {
-    "@galacean/engine": "^1.6.5"
+    "@galacean/engine": "^1.6.6"
   }
 }

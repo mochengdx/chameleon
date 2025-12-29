@@ -7,11 +7,9 @@
   "type": "module",
   "scripts": {
     "build": "tsc -b",
-    "test": "vitest"
+    "test": "vitest run --passWithNoTests"
   },
-  "dependencies": {
-
-  },
+  "dependencies": {},
   "devDependencies": {
     "typescript": "^5.9.3"
   }

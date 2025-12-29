@@ -1,5 +1,18 @@
 # Name: **Chameleon**
 
+[![CI](https://github.com/mochengdx/chameleon/actions/workflows/ci.yml/badge.svg)](https://github.com/mochengdx/chameleon/actions/workflows/ci.yml) [![Deploy Demo (GitHub Pages)](https://github.com/mochengdx/chameleon/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/mochengdx/chameleon/actions/workflows/deploy-pages.yml)
+
+Demo: https://mochengdx.github.io/chameleon/
+
+![Chameleon Demo Screenshot - Animation](docs/assets/Ani.jpg)
+
+![Chameleon Demo Screenshot - Shader](docs/assets/Shader.jpg)
+
+Deployment:
+
+- GitHub Pages: enable Pages and set Source = GitHub Actions (workflow: `.github/workflows/deploy-pages.yml`).
+- Vercel: import the repo and set Root Directory = `apps` (config: `apps/vercel.json`).
+
 ## Overview:
 
 **Chameleon** is a flexible and highly extensible 3D rendering and interaction framework designed to work seamlessly across various WebGL engines, including Three.js, Galacean, and more. It provides a modular pipeline that allows developers to load, render, and interact with 3D models efficiently, while also enabling custom extensions and interactions.
@@ -30,3 +43,30 @@ The framework is designed with scalability in mind, making it suitable for both 
 ---
 
 **Chameleon** is designed to give developers full control over the 3D experience, whether they are building simple models or complex, interactive 3D environments.
+
+---
+
+## Quick Start
+
+Prerequisites:
+
+- Node.js `>= 18.12` (this repo uses `pnpm@10`)
+- `pnpm` installed
+
+```bash
+pnpm install
+
+# run the demo app
+pnpm run dev:apps
+
+# run devtools (optional)
+pnpm run dev:devtools
+
+# run tests
+pnpm run test
+
+# build workspace packages
+pnpm run build
+```
+
+Demo app source lives in `apps/`.

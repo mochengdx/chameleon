@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#f6f8fa"/>
+  <rect x="40" y="40" width="1120" height="550" fill="#ffffff" stroke="#d0d7de"/>
+  <text x="600" y="300" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto" font-size="44" fill="#24292f">
+    Chameleon Demo Screenshot
+  </text>
+  <text x="600" y="360" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto" font-size="20" fill="#57606a">
+    Replace this file with a real screenshot (docs/assets/demo.svg)
+  </text>
+</svg>

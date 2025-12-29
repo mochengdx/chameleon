@@ -1,0 +1,534 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "Open Asset Import Library (assimp v5.2.cf7d3637)"
+  },
+  "extensionsUsed": [
+    "KHR_materials_specular",
+    "KHR_materials_volume",
+    "KHR_materials_ior",
+    "FB_ngon_encoding",
+    "ANT_materials_shader"
+  ],
+  "images": [
+    {
+      "name": "T_Effect_EdgeBaseMap",
+      "mimeType": "image/png",
+      "uri": "https://mdn.alipayobjects.com/oasis_be/afts/img/A*IP-ZRq1TJY4AAAAAQYAAAAgAekp5AQ/original/T_Effect_EdgeBaseMap.png"
+    },
+    {
+      "name": "T_PBR_PlaneEmissve",
+      "mimeType": "image/png",
+      "uri": "https://mdn.alipayobjects.com/oasis_be/afts/img/A*KjGNQLKclCsAAAAATkAAAAgAekp5AQ/original/T_PBR_PlaneEmissve.jpg"
+    },
+    {
+      "name": "T_EffectPlaneMap",
+      "mimeType": "image/png",
+      "uri": "https://mdn.alipayobjects.com/oasis_be/afts/img/A*i-yVTau9NcIAAAAAgBAAAAgAekp5AQ/original/T_EffectPlaneMap.png"
+    },
+    {
+      "name": "T_Effect_Noise",
+      "mimeType": "image/png",
+      "uri": "https://mdn.alipayobjects.com/oasis_be/afts/img/A*k-EDRKKvfuwAAAAAV9AAAAgAekp5AQ/original/T_Effect_Noise.png"
+    },
+    {
+      "name": "T_PBR_PlaneORM",
+      "mimeType": "image/png",
+      "uri": "https://mdn.alipayobjects.com/oasis_be/afts/img/A*uGX1TY0GbrcAAAAAVRAAAAgAekp5AQ/original/T_PBR_PlaneORM.jpg"
+    },
+    {
+      "name": "T_PBR_AddtiveMap",
+      "mimeType": "image/png",
+      "uri": "https://mdn.alipayobjects.com/oasis_be/afts/img/A*uGhzQ6RmOoYAAAAAXtAAAAgAekp5AQ/original/T_PBR_AddtiveMap.jpg"
+    },
+    {
+      "name": "T_PBR_ClothNormal",
+      "mimeType": "image/png",
+      "uri": "https://mdn.alipayobjects.com/oasis_be/afts/img/A*VkgLSIP_CREAAAAAgIAAAAgAekp5AQ/original/T_PBR_ClothNormal.png"
+    }
+  ],
+  "textures": [
+    { "source": 0, "sampler": 0, "name": "T_Effect_EdgeBaseMap" },
+    { "source": 1, "sampler": 0, "name": "material_BaseTexture" },
+    { "source": 2, "sampler": 0, "name": "material_RoughnessMetallicTexture" },
+    { "source": 3, "sampler": 0, "name": "main-material_Effectnoise" },
+    { "source": 5, "sampler": 0, "name": "main-material_Addtivexture" },
+    { "source": 4, "sampler": 0, "name": "cloth-material_RoughnessMetallicTexture" },
+    { "source": 6, "sampler": 0, "name": "cloth-material_NormalTexture" }
+  ],
+  "materials": [
+    {
+      "name": "M_BPR_Matellic",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [0.5, 0.5, 0.5, 1.0],
+        "metallicFactor": 0.0,
+        "roughnessFactor": 0.0
+      },
+      "doubleSided": true,
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 1.0,
+          "specularColorFactor": [2.0, 2.0, 2.0]
+        },
+        "KHR_materials_ior": {
+          "ior": 1.5199999809265137
+        },
+        "ANT_materials_shader": {
+          "shader": 2,
+          "properties": {
+            "material_BaseColor": {
+              "type": "color",
+              "value": [0.011764705882352941, 0.011764705882352941, 0.28235203921568627450989411764706, 1]
+            },
+            "material_Metal": { "type": "float", "value": 1 },
+            "material_Roughness": { "type": "float", "value": 1 },
+            "material_IOR": { "type": "float", "value": 1.5 },
+            "material_EmissiveColor": { "type": "color", "value": [0, 0, 0, 1] },
+            "material_NormalIntensity": { "type": "float", "value": 1 },
+            "material_OcclusionIntensity": { "type": "float", "value": 1 },
+            "material_AddtiveColor": { "type": "color", "value": [0.7058823529411765, 0.8392156862745098, 1, 1] },
+            "material_Effectcolor": { "type": "color", "value": [1, 1, 1, 1] },
+            "material_TilingOffset": { "type": "vec4", "value": [1, 1, 0, 0] },
+            "material_EffectTilling": { "type": "vec2", "value": [900, 900] },
+            "material_BaseTexture": { "type": "texture", "value": 1 },
+            "material_EmissiveTexture": { "type": "texture", "value": 1 },
+            "material_RoughnessMetallicTexture": { "type": "texture", "value": 2 },
+            "material_Addtivexture": { "type": "texture", "value": 4 },
+            "material_Efeecttexture": { "type": "texture", "value": 2 },
+            "material_Effectnoise": { "type": "texture", "value": 3 }
+          },
+          "pipeline": {
+            "doubleSided": true,
+            "alphaMode": "BLEND",
+            "depthTest": true,
+            "depthWrite": false,
+            "blending": true
+          }
+        }
+      }
+    },
+    {
+      "name": "M_PBR_Cloth",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [0.5, 0.5, 0.5, 1.0],
+        "metallicFactor": 0.0,
+        "roughnessFactor": 0.0
+      },
+      "doubleSided": true,
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 1.0,
+          "specularColorFactor": [2.0, 2.0, 2.0]
+        },
+        "KHR_materials_ior": {
+          "ior": 1.5199999809265137
+        },
+        "ANT_materials_shader": {
+          "shader": 2,
+          "properties": {
+            "material_BaseColor": {
+              "type": "color",
+              "value": [0.011764705882352941, 0.011764705882352941, 0.0392156862745098, 1]
+            },
+            "material_Metal": { "type": "float", "value": 1 },
+            "material_Roughness": { "type": "float", "value": 1 },
+            "material_IOR": { "type": "float", "value": 1.5 },
+            "material_EmissiveColor": { "type": "color", "value": [0, 0, 0, 1] },
+            "material_NormalIntensity": { "type": "float", "value": 1 },
+            "material_OcclusionIntensity": { "type": "float", "value": 1 },
+            "material_AddtiveColor": { "type": "color", "value": [0, 0, 0, 1] },
+            "material_Effectcolor": { "type": "color", "value": [0, 0, 0, 1] },
+            "material_TilingOffset": { "type": "vec4", "value": [1, 1, 0, 0] },
+            "material_EffectTilling": { "type": "vec2", "value": [1, 1] },
+            "material_RoughnessMetallicTexture": { "type": "texture", "value": 5 },
+            "material_NormalTexture": { "type": "texture", "value": 6 }
+          },
+          "description": "Reference to top-level shader id 'edge_shader' and override params"
+        }
+      }
+    },
+    {
+      "name": "M_Effect_Edge",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [0.5, 0.5, 0.5, 1.0],
+        "metallicFactor": 0.0,
+        "roughnessFactor": 0.0
+      },
+      "doubleSided": true,
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 1.0,
+          "specularColorFactor": [2.0, 2.0, 2.0]
+        },
+        "KHR_materials_ior": {
+          "ior": 1.5199999809265137
+        },
+        "ANT_materials_shader": {
+          "shader": 0,
+          "properties": {
+            "material_BaseTexture": { "type": "texture", "value": 0 }
+          },
+          "description": "Reference to top-level shader id 'edge_shader' and override params"
+        }
+      }
+    },
+    {
+      "name": "material"
+    }
+  ],
+  "extensions": {
+    "ANT_materials_shader": {
+      "version": "1.0",
+      "shaders": [
+        {
+          "id": "edge_shader",
+          "name": "Edge_Effect_Shader",
+          "version": "1.0",
+          "shader": {
+            "vertex": [{ "type": 0, "value": { "uri": "./assets/shaders/card/shaders/vertex.glsl" } }],
+            "fragment": [{ "type": 0, "value": { "uri": "./assets/shaders/card/shaders/fragment.glsl" } }],
+            "pipeline": {
+              "doubleSided": true,
+              "alphaMode": "BLEND",
+              "depthTest": true,
+              "depthWrite": false,
+              "blending": true
+            }
+          }
+        },
+        {
+          "id": "cloth_shader",
+          "name": "Cloth Effect Shader",
+          "version": "1.0",
+          "shader": {
+            "vertex": [{ "type": 0, "value": { "uri": "./assets/shaders/card/shaders/clothVertex.glsl" } }],
+            "fragment": [{ "type": 0, "value": { "uri": "./assets/shaders/card/shaders/clothFragment.glsl" } }],
+            "defines": {
+              "MATERIAL_HAS_NORMALTEXTURE": true,
+              "MATERIAL_NEED_WORLD_POS": true,
+              "MATERIAL_NEED_TILING_OFFSET": true,
+              "REFRACTION_MODE": 1
+            },
+            "properties": {
+              "material_BaseTexture": { "type": "texture", "value": 0 }
+            },
+            "pipeline": {
+              "doubleSided": true,
+              "alphaMode": "BLEND",
+              "depthTest": true,
+              "depthWrite": false,
+              "blending": true
+            }
+          }
+        },
+        {
+          "id": "main_shader",
+          "name": "Main PBR Shader",
+          "version": "1.0",
+          "shader": {
+            "vertex": [{ "type": 0, "value": { "uri": "./assets/shaders/card/shaders/mainVertex.glsl" } }],
+            "fragment": [{ "type": 0, "value": { "uri": "./assets/shaders/card/shaders/mainFragment.glsl" } }],
+            "defines": {
+              "MATERIAL_HAS_NORMALTEXTURE": true,
+              "MATERIAL_NEED_WORLD_POS": true,
+              "MATERIAL_NEED_TILING_OFFSET": true,
+              "REFRACTION_MODE": 1,
+              "HAS_NORMALTEXTURE": true
+            },
+            "pipeline": {
+              "doubleSided": true,
+              "alphaMode": "BLEND",
+              "depthTest": true,
+              "depthWrite": false,
+              "blending": false
+            }
+          }
+        }
+      ]
+    },
+    "KHR_lights_punctual": {
+      "lights": [
+        {
+          "name": "DefaultLight",
+          "type": "directional",
+          "color": [1.0, 1.0, 1.0],
+          "intensity": 1.0
+        }
+      ]
+    }
+  },
+  "accessors": [
+    {
+      "bufferView": 0,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 7788,
+      "type": "VEC3",
+      "max": [129.2264404296875, 186.06475830078126, 4.402059555053711],
+      "min": [-129.2264404296875, -186.06475830078126, -4.402059555053711]
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 7788,
+      "type": "VEC3",
+      "max": [0.9978261590003967, 0.9939543008804321, 1.0],
+      "min": [-0.9978261590003967, -0.9939543008804321, -1.0]
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 7788,
+      "type": "VEC2",
+      "max": [0.9950000047683716, 0.9950000047683716],
+      "min": [0.004999999888241291, 0.2959361672401428]
+    },
+    {
+      "bufferView": 3,
+      "byteOffset": 0,
+      "componentType": 5125,
+      "count": 7788,
+      "type": "SCALAR",
+      "max": [7787],
+      "min": [0]
+    },
+    {
+      "bufferView": 4,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 139608,
+      "type": "VEC3",
+      "max": [92.6064453125, 122.02813720703125, 34.96112823486328],
+      "min": [-92.6064453125, -123.22515869140625, -92.43221282958985]
+    },
+    {
+      "bufferView": 5,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 139608,
+      "type": "VEC3",
+      "max": [0.9999954700469971, 0.9999984502792358, 0.9999780654907227],
+      "min": [-0.999994158744812, -0.9999227523803711, -0.9999780654907227]
+    },
+    {
+      "bufferView": 6,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 139608,
+      "type": "VEC2",
+      "max": [0.9878147840499878, 0.99609375],
+      "min": [0.00390625, 0.00390625]
+    },
+    {
+      "bufferView": 7,
+      "byteOffset": 0,
+      "componentType": 5125,
+      "count": 139608,
+      "type": "SCALAR",
+      "max": [139607],
+      "min": [0]
+    },
+    {
+      "bufferView": 8,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 4368,
+      "type": "VEC3",
+      "max": [128.84034729003907, 185.56329345703126, 5.237558841705322],
+      "min": [-128.84034729003907, -185.56329345703126, -5.23761510848999]
+    },
+    {
+      "bufferView": 9,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 4368,
+      "type": "VEC3",
+      "max": [0.7540024518966675, 0.6618087887763977, 1.0],
+      "min": [-0.7540024518966675, -0.6618087887763977, -1.0]
+    },
+    {
+      "bufferView": 10,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 4368,
+      "type": "VEC2",
+      "max": [0.9991869926452637, 0.99609375],
+      "min": [0.0006960281170904636, 0.00390625]
+    },
+    {
+      "bufferView": 11,
+      "byteOffset": 0,
+      "componentType": 5125,
+      "count": 4368,
+      "type": "SCALAR",
+      "max": [4367],
+      "min": [0]
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 5463504,
+      "uri": "model.bin"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 93456,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 93456,
+      "byteLength": 93456,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 186912,
+      "byteLength": 62304,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 249216,
+      "byteLength": 31152,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 280368,
+      "byteLength": 1675296,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 1955664,
+      "byteLength": 1675296,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 3630960,
+      "byteLength": 1116864,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 4747824,
+      "byteLength": 558432,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 5306256,
+      "byteLength": 52416,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 5358672,
+      "byteLength": 52416,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 5411088,
+      "byteLength": 34944,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 5446032,
+      "byteLength": 17472,
+      "target": 34963
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Mesh",
+      "primitives": [
+        {
+          "mode": 4,
+          "material": 0,
+          "indices": 3,
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mesh.001",
+      "primitives": [
+        {
+          "mode": 4,
+          "material": 1,
+          "indices": 7,
+          "attributes": {
+            "POSITION": 4,
+            "NORMAL": 5,
+            "TEXCOORD_0": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mesh.002",
+      "primitives": [
+        {
+          "mode": 4,
+          "material": 2,
+          "indices": 11,
+          "attributes": {
+            "POSITION": 8,
+            "NORMAL": 9,
+            "TEXCOORD_0": 10
+          }
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "ROOT",
+      "children": [1, 2, 3]
+    },
+    {
+      "name": "BPR_Matellic",
+      "matrix": [
+        0.009999999776482582, 0.0, 0.0, 0.0, 0.0, 0.009999999776482582, 0.0, 0.0, 0.0, 0.0, 0.009999999776482582, 0.0,
+        0.0, 0.0, 0.0, 1.0
+      ],
+      "mesh": 0
+    },
+    {
+      "name": "BPR_Cloth",
+      "matrix": [
+        0.009999999776482582, 0.0, 0.0, 0.0, 0.0, 0.009999999776482582, 0.0, 0.0, 0.0, 0.0, 0.009999999776482582, 0.0,
+        0.009042968973517418, 0.22335387766361237, 0.2880990207195282, 1.0
+      ],
+      "mesh": 1
+    },
+    {
+      "name": "Effect_Edge",
+      "matrix": [
+        0.009999999776482582, 0.0, 0.0, 0.0, 0.0, 0.009999999776482582, 0.0, 0.0, 0.0, 0.0, 0.009999999776482582, 0.0,
+        0.0, 0.0, 0.0, 1.0
+      ],
+      "mesh": 2
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [0]
+    }
+  ],
+  "scene": 0,
+  "samplers": [{ "wrapS": 10497, "wrapT": 10497 }]
+}

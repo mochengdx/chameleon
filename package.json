@@ -3,20 +3,24 @@
   "version": "1.0.0",
   "description": "Chameleon is a flexible and highly extensible 3D rendering and interaction framework designed to work seamlessly across various WebGL engines, including Three.js, Galacean, and more. It provides a modular pipeline that allows developers to load, render, and interact with 3D models efficiently, while also enabling custom extensions and interactions.",
   "main": "index.js",
+  "engines": {
+    "node": ">=18.12"
+  },
   "scripts": {
-    "dev:examples": "pnpm -w --filter \"packages/examples\" dev",
-    "dev:devtools": "pnpm -w --filter \"packages/devtools\" dev",
-    "build": "pnpm -w run build",
-    "build:types": "pnpm -w run build:types",
-    "build:core": "pnpm -w -r build",
-    "test": "pnpm -w -r test",
-    "lint": "eslint packages/** --ext .js,.ts,.tsx,.json --ignore-pattern node_modules/*",
-    "lint:fix": "eslint packages/** --ext .js,.ts,.tsx,.json --ignore-pattern node_modules/* --fix",
+    "dev:apps": "pnpm -w --filter \"@chameleon/apps\" dev",
+    "dev:examples": "pnpm -w run dev:apps",
+    "dev:devtools": "pnpm -w --filter \"@chameleon/devtools\" dev",
+    "build": "pnpm -r --filter \"!chameleon\" --if-present build",
+    "build:types": "pnpm -r --filter \"!chameleon\" --if-present build:types",
+    "build:core": "pnpm -r --filter \"!chameleon\" --if-present build",
+    "test": "pnpm -r --filter \"!chameleon\" --if-present test",
+    "lint": "eslint . --ext .js,.ts,.tsx --ignore-pattern \"node_modules/**\" --ignore-pattern \"**/dist/**\" --ignore-pattern \"**/.rollup.cache/**\" --ignore-pattern \"**/.eslintcache\"",
+    "lint:fix": "eslint . --ext .js,.ts,.tsx --ignore-pattern \"node_modules/**\" --ignore-pattern \"**/dist/**\" --ignore-pattern \"**/.rollup.cache/**\" --ignore-pattern \"**/.eslintcache\" --fix",
     "prepare": "husky install",
-    "clean": "pnpm -w run clean",
+    "clean": "pnpm -r --filter \"!chameleon\" --if-present clean",
     "type:check": "pnpm -w -s tsc --noEmit",
     "typecheck": "pnpm -w -s tsc --noEmit",
-    "ci": "pnpm -w -s tsc --noEmit && pnpm -w -s eslint . --ext .ts,.tsx,.js,.jsx"
+    "ci": "pnpm -w -s tsc --noEmit && pnpm -w run lint && pnpm -w run test"
   },
   "keywords": [
     "3D",
@@ -60,10 +64,8 @@
     "zustand": "^4.5.0",
     "rollup": "^4.52.4",
     "rollup-plugin-dts": "^6.2.3",
-    "rollup-plugin-terser": "^7.0.2",
     "typescript": "^5.9.3",
-    "vitest": "^0.32.4",
-    "zustand": "^4.5.0"
+    "vitest": "^0.32.4"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
@@ -72,6 +74,13 @@
     "*.json": [
       "prettier --write"
     ]
+  },
+  "pnpm": {
+    "overrides": {
+      "@galacean/engine": "1.6.6",
+      "react": "18.3.1",
+      "react-dom": "18.3.1"
+    }
   },
   "dependencies": {
     "rimraf": "^5.0.10",

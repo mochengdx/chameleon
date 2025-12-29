@@ -7,46 +7,37 @@ on:
     branches: [main, master]
 
 jobs:
-  build:
+  build_test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [18.x]
+
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup pnpm (via official action)
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
-
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 22
 
-      - name: Setup Corepack (if needed)
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup pnpm
+        run: corepack prepare pnpm@10.15.0 --activate
+
+      - name: Verify toolchain
         run: |
-          npm install -g corepack
-
-      - name: Enable and prepare pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@latest --activate
-
-      - name: Verify pnpm is available
-        run: pnpm --version
+          node --version
+          pnpm --version
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
-      - name: Typecheck
-        run: pnpm -w -s tsc --noEmit
+      - name: CI (typecheck + lint + test)
+        run: pnpm run ci
 
-      - name: Lint
-        run: pnpm -w -s eslint . --ext .ts,.tsx,.js --max-warnings=0 || true
-
-      - name: Run adapters tests
-        run: pnpm --filter ./packages/adapters vitest run --reporter dot
+      - name: Build workspace packages
+        run: pnpm run build
