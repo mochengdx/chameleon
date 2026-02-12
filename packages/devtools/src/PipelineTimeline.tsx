@@ -1,8 +1,9 @@
 import React from "react";
 import { useDevtoolsStore } from "./usePipelineDevTools";
 
-export const PipelineTimeline: React.FC<{ records?: any[] }> = ({ records }) => {
-  const recs = useDevtoolsStore((s) => s.records);
+export const PipelineTimeline: React.FC<{ records?: any[] }> = ({ records: propRecords }) => {
+  const storeRecords = useDevtoolsStore((s) => s.records);
+  const recs = propRecords ?? storeRecords;
   return (
     <div className="flex flex-col gap-1">
       {recs.map((r, i) => (

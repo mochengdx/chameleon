@@ -1,6 +1,6 @@
 {
   "name": "@chameleon/adapters",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "dist/index.esm.js",
   "module": "src/index.ts",
   "types": "dist/index.d.ts",

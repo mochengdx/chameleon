@@ -1,5 +1,6 @@
 import type { RenderingContext } from "@chameleon/core";
-import { BoundingBox, Entity, MeshRenderer, Vector3 } from "@galacean/engine";
+import type { Entity } from "@galacean/engine";
+import { BoundingBox, MeshRenderer, Vector3 } from "@galacean/engine";
 
 /**
  * computeModelBoundingSphere

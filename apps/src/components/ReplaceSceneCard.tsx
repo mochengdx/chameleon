@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { GalaceanAdapter } from "@chameleon/adapters";
-import type { IPlugin, RenderingContext } from "@chameleon/core";
+import type { RenderingContext } from "@chameleon/core";
 import { attachLoggerToPipeline, Pipeline, type RenderRequest } from "@chameleon/core";
 import { DefCameraControlPlugin, DefGalaceanInteractionPlugin, PipelineAdapterPlugin } from "@chameleon/plugins";
 import React, { useCallback, useEffect, useRef } from "react";
@@ -103,7 +103,7 @@ function getRandomReplacement() {
 export default function ReplaceSceneCard() {
   const pipieRef = useRef<{ pipeline: Pipeline | null; ctx: RenderingContext }>(null);
   const [loading, setLoading] = React.useState<boolean>(false);
-  console.log("Render ReplaceSceneCard", loading);
+
   const loadBasicGltfAndFreeControlDemo = async (canvas: HTMLCanvasElement) => {
     // Reuse pipeline per canvas when possible
     const existing = getPipelineForCanvas(canvas);
@@ -153,14 +153,6 @@ export default function ReplaceSceneCard() {
     }
     const { pipeline, ctx } = pipieRef.current;
 
-    // attach plugins
-    const plugins: IPlugin[] = [
-      // new PipelineAdapterPlugin(),
-      // new DefCameraControlPlugin(),
-      // new DefGalaceanInteractionPlugin(),
-      new EnvironmentSkyboxPlugin()
-    ];
-    plugins.forEach((p) => pipeline!.use(p));
     const data: RenderRequest = {
       id: "demo",
       source: getRandomReplacement().url
@@ -194,8 +186,6 @@ export default function ReplaceSceneCard() {
     pipeline.uninstall("EnvironmentSkyboxPlugin");
   }, []);
 
-  useEffect(() => {}, []);
-
   // cleanup on unmount: dispose pipeline if exists
   useEffect(() => {
     return () => {
@@ -210,7 +200,6 @@ export default function ReplaceSceneCard() {
       }
     };
   }, []);
-
   return (
     <SceneCard
       externalNode={

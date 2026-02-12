@@ -1,13 +1,6 @@
-import { EngineAdapter, RenderingContext } from "@chameleon/core";
-import {
-  AssetType,
-  Camera,
-  Entity,
-  WebGLEngine as GLEngine,
-  GLTFResource,
-  Scene,
-  WebGLGraphicDeviceOptions
-} from "@galacean/engine";
+import type { EngineAdapter, RenderingContext } from "@chameleon/core";
+import type { Entity, GLTFResource, Scene, WebGLGraphicDeviceOptions } from "@galacean/engine";
+import { AssetType, Camera, WebGLEngine as GLEngine } from "@galacean/engine";
 import { SUPPORTED_ADAPTERS } from "./constants";
 import "./extensions/ANT_materials_shaders";
 import "./parsers/GalaceanGLTFMaterialParser";

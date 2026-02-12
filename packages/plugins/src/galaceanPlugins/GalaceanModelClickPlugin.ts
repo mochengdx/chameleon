@@ -123,7 +123,7 @@ export class GalaceanModelClickPlugin implements IPlugin {
 
       addStageCleanup(ctx, "postProcess", async () => {
         // cleanup picker if we created one
-        let scripts: Script[] = [];
+        const scripts: Script[] = [];
         cameraEntity.getComponents(Script, scripts);
         scripts.forEach((script) => {
           // @ts-ignore

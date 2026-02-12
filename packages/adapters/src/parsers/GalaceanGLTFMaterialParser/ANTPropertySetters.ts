@@ -1,13 +1,5 @@
-import {
-  BaseMaterial,
-  Color,
-  GLTFParserContext,
-  GLTFParserType,
-  Texture2D,
-  Vector2,
-  Vector3,
-  Vector4
-} from "@galacean/engine";
+import type { BaseMaterial, GLTFParserContext, Texture2D } from "@galacean/engine";
+import { Color, GLTFParserType, Vector2, Vector3, Vector4 } from "@galacean/engine";
 
 /**
  * Helper setters for applying values to a material's shaderData.

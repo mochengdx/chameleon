@@ -1,10 +1,9 @@
-import { GLTF } from "@chameleon/core";
+import type { GLTF } from "@chameleon/core";
+import type { GLTFParserContext, Material } from "@galacean/engine";
 import {
   GLTFExtensionMode,
   GLTFExtensionParser,
-  GLTFParserContext,
   GLTFParserType,
-  Material,
   PBRMaterial,
   registerGLTFExtension
 } from "@galacean/engine";

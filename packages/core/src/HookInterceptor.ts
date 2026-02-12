@@ -2,7 +2,7 @@
 import type { FullTap } from "tapable";
 import type { Logger } from "./Logger";
 import type { RenderingContext } from "./RenderingContext";
-import { Pipeline } from "./Pipeline";
+import type { Pipeline } from "./Pipeline";
 
 /**
  * attachLoggerToPipeline

@@ -1,5 +1,5 @@
 import type { EngineAdapter } from "./EngineAdapter";
-import EventBus from "./EventBus";
+import type EventBus from "./EventBus";
 import type { Pipeline } from "./Pipeline";
 
 export type RenderRequest = {

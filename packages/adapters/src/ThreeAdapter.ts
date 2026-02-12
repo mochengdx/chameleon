@@ -9,13 +9,11 @@ export class ThreeAdapter {
   // camera!: THREE.PerspectiveCamera;
   // private rafId: number | null = null;
   // private mixers: THREE.AnimationMixer[] = [];
-
   // async init(container: HTMLElement, ctx?: RenderingContext) {
   //   this.renderer = new THREE.WebGLRenderer({ antialias: true });
   //   this.renderer.setSize(container.clientWidth || window.innerWidth, container.clientHeight || window.innerHeight);
   //   this.renderer.setPixelRatio(window.devicePixelRatio || 1);
   //   container.appendChild(this.renderer.domElement);
-
   //   this.scene = new THREE.Scene();
   //   this.camera = new THREE.PerspectiveCamera(
   //     45,
@@ -24,23 +22,18 @@ export class ThreeAdapter {
   //     1000
   //   );
   //   this.camera.position.set(0, 1.6, 3);
-
   //   const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
   //   hemi.position.set(0, 10, 0);
   //   this.scene.add(hemi);
-
   //   ctx && (ctx.engineHandles = { renderer: this.renderer, scene: this.scene, camera: this.camera });
   // }
-
   // async loadResource(src: string) {
   //   const loader = new GLTFLoader();
   //   return loader.loadAsync(src);
   // }
-
   // async parseResource(raw: any) {
   //   return raw;
   // }
-
   // async buildScene(parsed: any, ctx?: RenderingContext) {
   //   if (parsed?.scene) {
   //     this.scene.add(parsed.scene);
@@ -53,7 +46,6 @@ export class ThreeAdapter {
   //   }
   //   return ctx;
   // }
-
   // startRenderLoop(ctx: RenderingContext, onFrame: (dt: number) => void) {
   //   const clock = new THREE.Clock();
   //   const loop = () => {
@@ -70,12 +62,10 @@ export class ThreeAdapter {
   //   };
   //   this.rafId = requestAnimationFrame(loop);
   // }
-
   // stopRenderLoop() {
   //   if (this.rafId) cancelAnimationFrame(this.rafId);
   //   this.rafId = null;
   // }
-
   // createTextureFromElement(el: any) {
   //   if (el instanceof HTMLVideoElement) return new (THREE as any).VideoTexture(el);
   //   if (el instanceof HTMLImageElement) {
@@ -86,11 +76,9 @@ export class ThreeAdapter {
   //   if (el instanceof HTMLCanvasElement) return new THREE.CanvasTexture(el);
   //   return null;
   // }
-
   // updateVideoTexture(_v: HTMLVideoElement) {
   //   /* three handles auto-update */
   // }
-
   // async applyCustomShader(shader: any, ctx: RenderingContext) {
   //   if (!shader?.code) return;
   //   this.scene &&
@@ -107,7 +95,6 @@ export class ThreeAdapter {
   //       }
   //     });
   // }
-
   // dispose() {
   //   this.renderer.dispose();
   // }

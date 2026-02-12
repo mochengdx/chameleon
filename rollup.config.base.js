@@ -27,8 +27,6 @@ export default function createBaseConfig({
     input,
     external,
     plugins: [
-      // use rollup-plugin-typescript2 to allow tsconfigOverride
-
       json(),
       resolve({ extensions, browser: true }),
       commonjs(),

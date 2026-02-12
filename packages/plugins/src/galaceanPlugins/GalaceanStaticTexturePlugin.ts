@@ -1,6 +1,6 @@
 // ...existing code...
 import type { IPlugin, Pipeline, RenderingContext } from "@chameleon/core";
-import { WebGLEngine, Scene, Entity } from "@galacean/engine";
+import type { WebGLEngine, Scene, Entity } from "@galacean/engine";
 
 export class GalaceanStaticTexturePlugin implements IPlugin {
   public name = "GalaceanStaticTexturePlugin";

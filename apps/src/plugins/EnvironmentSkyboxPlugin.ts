@@ -1,5 +1,5 @@
 import type { IPlugin, Pipeline, RenderingContext } from "@chameleon/core";
-import type { AmbientLight, WebGLEngine, Scene } from "@galacean/engine";
+import type { AmbientLight, Scene, WebGLEngine } from "@galacean/engine";
 import { AssetType, BackgroundMode, PrimitiveMesh, SkyBoxMaterial } from "@galacean/engine";
 
 export class EnvironmentSkyboxPlugin implements IPlugin {
@@ -30,12 +30,6 @@ export class EnvironmentSkyboxPlugin implements IPlugin {
     });
   }
   unapply(pipeline: Pipeline): void {
-    // const {} = pipeline;
-    // const { scene, engine } = ctx.engineHandles ?? {};
-    // if (!scene || !engine) {
-    //   return ctx;
-    // }
-    // typeScene.background = this.origin;
     pipeline.uninstall(this.name);
   }
 }

@@ -1,16 +1,6 @@
 import { MODEL_CLICKED, offEvent, onEvent, type IPlugin, type Pipeline, type RenderingContext } from "@chameleon/core";
-import {
-  Animator,
-  AnimatorLayerBlendingMode,
-  AnimatorState,
-  AnimatorStateTransition,
-  Camera,
-  Entity,
-  GLTFResource,
-  Scene,
-  WebGLEngine,
-  WrapMode
-} from "@galacean/engine";
+import type { AnimatorState, Camera, Entity, GLTFResource, Scene, WebGLEngine } from "@galacean/engine";
+import { Animator, AnimatorLayerBlendingMode, AnimatorStateTransition, WrapMode } from "@galacean/engine";
 import { addStageCleanup } from "../utils";
 
 type SpecCtx = RenderingContext<WebGLEngine, Scene, Camera, any, GLTFResource, Entity>;

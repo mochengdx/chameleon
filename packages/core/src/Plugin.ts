@@ -1,4 +1,4 @@
-import { Pipeline } from "./Pipeline";
+import type { Pipeline } from "./Pipeline";
 
 /**
  * IPlugin

@@ -1,5 +1,5 @@
 import type { ANTUniform } from "@chameleon/core";
-import { BaseMaterial, GLTFParserContext } from "@galacean/engine";
+import type { BaseMaterial, GLTFParserContext } from "@galacean/engine";
 import {
   setColor,
   setFloat,

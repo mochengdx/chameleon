@@ -1,4 +1,4 @@
-import { BaseMaterial } from "@galacean/engine";
+import type { BaseMaterial } from "@galacean/engine";
 
 /**
  * Small helpers to manage `material.extras.__ant` payloads.

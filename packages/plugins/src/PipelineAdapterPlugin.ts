@@ -1,4 +1,4 @@
-import { IPlugin, Pipeline, RenderingContext } from "@chameleon/core";
+import type { IPlugin, Pipeline, RenderingContext } from "@chameleon/core";
 import {
   addStageCleanup,
   ensureMetadata,

@@ -1,5 +1,5 @@
 import type { RenderingContext } from "../RenderingContext";
-import EventBus from "./bus";
+import type EventBus from "./bus";
 
 /** Safe accessor helpers for the per-run EventBus stored on ctx.eventBus. */
 export function getEventBus(ctx?: RenderingContext<any, any, any, any, any, any>): EventBus | undefined {

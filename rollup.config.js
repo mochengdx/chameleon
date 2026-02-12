@@ -1,23 +1,17 @@
 import path from "path";
 import fs from "fs";
+import rollupBase from "./rollup.config.base.js";
 
-// const fs = require("fs");
-
-import rollupBase from './rollup.config.base.js';
-// import dts from "rollup-plugin-dts";
-// import pkg from "./package.json";
 const extensions = [".ts", ".tsx", ".js", ".jsx"];
-
-// const isProduction = process.env.NODE_ENV === "production";
 
 const external = [
   "react",
   "react-dom",
   "three",
-  "galacean",
-  "@babel/core",
-  "@rollup/plugin-node-resolve"
-  // Add any other external dependencies here
+  "@galacean/engine",
+  "@galacean/engine-toolkit",
+  "tapable",
+  "lodash-es"
 ];
 
 const dontCompiles = [
@@ -39,54 +33,32 @@ const pkgs = fs
     };
   });
 
-  function makeRollupConfigForPkg(pkg) {
-    return rollupBase({
-      input: path.resolve(pkg.location, "src/index.ts"),
-      output: [
-        {
-          // dir:  path.resolve(pkg.location, "dist"),
-          file: path.resolve(pkg.location, "dist/index.esm.js"),
-          format: "esm",
-          sourcemap: true
-        },
-        {
-          //  dir:  path.resolve(pkg.location, "dist"),
-          file: path.resolve(pkg.location, "dist/index.cjs.js"),
-          format: "cjs",
-          sourcemap: true
-        }
-      ],
-      tsconfig: path.resolve(pkg.location, "tsconfig.json"),
-      external,
-      extensions,
-      // declarationDir: path.resolve(pkg.location, "types")
-    });
-  }
+function makeRollupConfigForPkg(pkg) {
+  return rollupBase({
+    input: path.resolve(pkg.location, "src/index.ts"),
+    output: [
+      {
+        // dir:  path.resolve(pkg.location, "dist"),
+        file: path.resolve(pkg.location, "dist/index.esm.js"),
+        format: "esm",
+        sourcemap: true
+      },
+      {
+        //  dir:  path.resolve(pkg.location, "dist"),
+        file: path.resolve(pkg.location, "dist/index.cjs.js"),
+        format: "cjs",
+        sourcemap: true
+      }
+    ],
+    tsconfig: path.resolve(pkg.location, "tsconfig.json"),
+    external,
+    extensions
+    // declarationDir: path.resolve(pkg.location, "types")
+  });
+}
 
-  if(process.env.NODE_ENV !== 'production'){
-    console.log("Building packages:", pkgs.map(p => p.pkgJson.name).join(", "));
-  }
+if (process.env.NODE_ENV !== "production") {
+  console.log("Building packages:", pkgs.map((p) => p.pkgJson.name).join(", "));
+}
 
 export default pkgs.map((pkg) => makeRollupConfigForPkg(pkg));
-// export default rollupBase({
-//   input: path.resolve(__dirname, "packages/core/src/index.ts"),
-//   output: [
-//     {
-//       // dir:  path.resolve(__dirname, "packages/core/dist"),
-//       file: path.resolve(__dirname, "packages/core/dist/index.esm.js"),
-//       format: "esm",
-//       sourcemap: true
-//     },
-//     {
-//       //  dir:  path.resolve(__dirname, "packages/core/dist"),
-//       file: path.resolve(__dirname, "packages/core/dist/index.cjs.js"),
-//       format: "cjs",
-//       sourcemap: true
-//     }
-//   ],
-//   tsconfig: path.resolve(__dirname, "packages/core/tsconfig.json"),
-//   external,
-//   extensions,
-//   // declarationDir: path.resolve(__dirname, "packages/core/types")
-// })
-

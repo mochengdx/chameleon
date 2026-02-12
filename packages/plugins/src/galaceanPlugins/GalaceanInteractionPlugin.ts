@@ -1,6 +1,8 @@
 import type { IPlugin, Pipeline, RenderingContext } from "@chameleon/core";
-import { WebGLEngine, Scene, Entity, Camera, MeshRenderer, BoundingBox, Vector3 } from "@galacean/engine";
+import type { Entity, Scene, WebGLEngine } from "@galacean/engine";
+import { Camera } from "@galacean/engine";
 import { OrbitControl } from "@galacean/engine-toolkit";
+import { computeModelBoundingSphere } from "./galaceanUtils";
 
 /**
  * DefGalaceanInteractionPlugin
@@ -23,61 +25,6 @@ export class DefGalaceanInteractionPlugin implements IPlugin {
 
   // Default multiplier used when computing camera distance so the model comfortably fits.
   private _fitOffset = 1.2;
-
-  /**
-   * computeModelBoundingSphere
-   *
-   * Collect mesh renderer bounds from the provided entity subtree, merge them into one
-   * bounding box, then derive a center and radius. The radius is approximated as half
-   * the diagonal length of the bounding box extent.
-   *
-   * Returns a conservative fallback (center from entity world position or origin,
-   * radius = 1.0) when no renderer bounds are available or when calculations fail.
-   */
-  private computeModelBoundingSphere(modelEntity: Entity): { center: Vector3; radius: number } {
-    const meshRenderers: MeshRenderer[] = [];
-    modelEntity.getComponentsIncludeChildren(MeshRenderer, meshRenderers);
-
-    // Accumulator bbox initialized to inverted extremes
-    const bbox = new BoundingBox();
-    bbox.min.set(Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY);
-    bbox.max.set(Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY);
-
-    // If no renderers found, try to use the entity world position as center
-    if (meshRenderers.length === 0) {
-      const fallbackCenter = new Vector3();
-      try {
-        const p = modelEntity.transform.worldPosition;
-        fallbackCenter.copyFrom(p);
-      } catch {
-        // leave fallbackCenter as zero-vector on error
-      }
-      return { center: fallbackCenter, radius: 1.0 };
-    }
-
-    // Merge all renderer bounds into the accumulator; skip any problematic entries
-    for (const r of meshRenderers) {
-      try {
-        BoundingBox.merge(r.bounds, bbox, bbox);
-      } catch {
-        // ignore single-renderer failures to remain robust
-      }
-    }
-
-    // Compute center and extent; if this fails, return safe fallback
-    const center = new Vector3();
-    const extent = new Vector3();
-    try {
-      bbox.getCenter(center);
-      bbox.getExtent(extent);
-    } catch {
-      return { center, radius: 1.0 };
-    }
-
-    // Radius is half the diagonal of extent; guard against degenerate values
-    const radius = Math.max(0.0001, extent.length() * 0.5);
-    return { center, radius };
-  }
 
   /**
    * getCameraEntity
@@ -144,7 +91,8 @@ export class DefGalaceanInteractionPlugin implements IPlugin {
     const parsedEntity = this.getParsedEntity(ctx);
 
     // Compute center + radius for framing
-    const { center, radius } = this.computeModelBoundingSphere(parsedEntity);
+    const { center, radius } = computeModelBoundingSphere(parsedEntity);
+
     // Ensure camera component exists
     const camera = cameraEntity.getComponent(Camera);
     if (!camera) {
@@ -164,7 +112,6 @@ export class DefGalaceanInteractionPlugin implements IPlugin {
 
     // Configure orbit control target and safe min/max distances
     orbitControl.target.set(center.x, center.y, center.z);
-    // orbitControl.minDistance = Math.max(0.1, radius * 0.5);
     orbitControl.minDistance = Math.max(0.1, distance - radius);
     orbitControl.maxDistance = Math.max(orbitControl.minDistance + 0.1, distance * 4);
 

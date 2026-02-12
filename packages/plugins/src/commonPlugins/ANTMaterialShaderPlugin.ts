@@ -1,5 +1,5 @@
 import type { GLTF, Pipeline, RenderingContext } from "@chameleon/core";
-import { IPlugin } from "@chameleon/core";
+import type { IPlugin } from "@chameleon/core";
 
 // Lightweight fetch helper that returns text and caches requests per URL
 const fetchText = async (url: string, cache: Map<string, string>) => {
